@@ -76,4 +76,15 @@ public class FirstPersonController : MonoBehaviour
             rb.AddForce(velocityChange, ForceMode.VelocityChange);
         }
     }
+
+    public void PickUp()
+    { 
+    
+    }
+
+    public void DropDown()
+    { 
+    
+        
+    }
 }
