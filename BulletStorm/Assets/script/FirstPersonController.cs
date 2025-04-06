@@ -5,6 +5,7 @@ public class FirstPersonController : MonoBehaviour
     private Rigidbody rb;
     public Animator animator;
     public Camera playerCamera;
+    public Transform AimTarget;
     public float fov = 60f;
     public bool cameraCanMove = true;
     public float mouseSensitivity = 100f;
@@ -51,6 +52,7 @@ public class FirstPersonController : MonoBehaviour
         Vector3 mouseScreenPosition = Input.mousePosition;
         mouseScreenPosition.z = zDinstance;
         Vector3 mouseWorldPosition = playerCamera.ScreenToWorldPoint(mouseScreenPosition);
+        AimTarget.transform.position = mouseWorldPosition;
     }
 
     private void Move()

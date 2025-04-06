@@ -7204,8 +7204,8 @@ MonoBehaviour:
         transform: {fileID: 0}
         weight: 0
     m_Offset: {x: 0, y: 0, z: 0}
-    m_MinLimit: -90
-    m_MaxLimit: 90
+    m_MinLimit: -30
+    m_MaxLimit: 30
     m_AimAxis: 3
     m_UpAxis: 1
     m_WorldUpType: 0
@@ -7520,8 +7520,8 @@ MonoBehaviour:
         transform: {fileID: 0}
         weight: 0
     m_Offset: {x: 0, y: 0, z: 0}
-    m_MinLimit: -90
-    m_MaxLimit: 90
+    m_MinLimit: -30
+    m_MaxLimit: 30
     m_AimAxis: 3
     m_UpAxis: 1
     m_WorldUpType: 0
@@ -10983,6 +10983,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 863443620}
   playerCamera: {fileID: 1640417888}
+  AimTarget: {fileID: 377641598}
   fov: 60
   cameraCanMove: 1
   mouseSensitivity: 2
@@ -13087,8 +13088,8 @@ MonoBehaviour:
         transform: {fileID: 0}
         weight: 0
     m_Offset: {x: 0, y: 0, z: 0}
-    m_MinLimit: -90
-    m_MaxLimit: 90
+    m_MinLimit: -30
+    m_MaxLimit: 0
     m_AimAxis: 1
     m_UpAxis: 2
     m_WorldUpType: 0
