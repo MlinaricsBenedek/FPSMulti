@@ -43,12 +43,11 @@ public class GunController : MonoBehaviour
         Collider.isTrigger = false;
         //Gun carries momentum of player
         transform.localScale = transform.localScale * 2;
-        transform.localScale = new Vector3(0.0523f, 0.062523f, 0.062523f);
         //AddForce
         Rigidbody.AddForce(PlayerCamera.forward * dropForwardForce, ForceMode.Impulse);
         Rigidbody.AddForce(PlayerCamera.up * dropUpwardForce, ForceMode.Impulse);
         //Add random rotation
-        float random = Random.Range(-1f, 1f);
+        float random = Random.Range(-0.01f, 0.01f);
         Rigidbody.AddTorque(new Vector3(random, random, random) * 3);
     }
 }
