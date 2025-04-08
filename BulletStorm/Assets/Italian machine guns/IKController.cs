@@ -31,13 +31,13 @@ public class IKController : MonoBehaviour
                 animator.SetIKRotation(AvatarIKGoal.LeftHand, leftHandTarget.rotation);
             }
         }
-        //else
-        //{
-        //    // Ha nincs fegyver, engedjük el az IK-t, hogy visszatérjen az alapállapotba
-        //    animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 0);
-        //    animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 0);
-        //    animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0);
-        //    animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0);
-        //}
+        else
+        {
+            // Ha nincs fegyver, engedjük el az IK-t, hogy visszatérjen az alapállapotba
+            animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 0);
+            animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 0);
+            animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0);
+            animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0);
+        }
     }
 }

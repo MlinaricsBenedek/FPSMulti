@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Animations.Rigging;
 
 public class FirstPersonController : MonoBehaviour
 {
@@ -16,8 +18,15 @@ public class FirstPersonController : MonoBehaviour
     public bool playerCanMove = true;
     public float walkSpeed = 5f;
     public float maxVelocityChange = 5.0f;
-
     float zDinstance = 10f;
+    public bool slotFull;
+    public bool equipped;
+    public float dropForwardForce = 10f;
+    public float dropUpwardForce =10f;
+    public Transform GunPosition;
+    GunController gunController;
+    [SerializeField] RotationConstraint LeftHandConstraint;
+    [SerializeField] RotationConstraint RightHandConstraint;
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -27,6 +36,8 @@ public class FirstPersonController : MonoBehaviour
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
+        slotFull = false;
+        equipped =false;
     }
 
     float camRotation;
@@ -34,11 +45,25 @@ public class FirstPersonController : MonoBehaviour
     private void Update()
     {
         HandleCamera();
+        PickUp();
     }
 
     void FixedUpdate()
     {
         Move();
+        HandleInput();
+    }
+
+    public void HandleInput()
+    {
+        if (slotFull is not true && Input.GetKeyUp(KeyCode.E))
+        {
+         //   PickUp();
+        }
+        else if(slotFull is not false && Input.GetKeyUp(KeyCode.Q))
+        {
+            DropDown();
+        }
     }
 
     private void HandleCamera()
@@ -80,13 +105,65 @@ public class FirstPersonController : MonoBehaviour
     }
 
     public void PickUp()
-    { 
-    
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit) &&
+            hit.collider != null &&
+            Input.GetKey(KeyCode.E))
+        {
+            gunController = hit.collider.GetComponent<GunController>();
+            //GetRotationConstraints(gunController);
+            if (gunController != null)
+            {
+                Debug.Log("Fegyver találva, PickUp meghívva");
+                gunController.PickUp();
+                GetRotationConstraints(gunController);
+            }
+            else
+            {
+                Debug.LogWarning("Talált objektumon nincs GunController komponens!");
+            }
+        }
+        equipped = true;
+        slotFull = true;
+      
+    }
+
+    public void GetRotationConstraints(GunController gun)
+    {
+        ConstraintSource leftHandconstraintSource = new();
+        while (LeftHandConstraint.sourceCount > 0)
+        {
+            LeftHandConstraint.RemoveSource(0);
+        }
+        Debug.Log(gun.name);
+        leftHandconstraintSource.weight = 1f;
+        leftHandconstraintSource.sourceTransform = gun.gameObject.transform.Find("LeftHandTarget");
+        Debug.Log(gun.gameObject.transform.Find("LeftHandTarget"));
+        LeftHandConstraint.AddSource(leftHandconstraintSource);
+        
+        ConstraintSource rightHandconstraintSource = new();
+        while (RightHandConstraint.sourceCount > 0)
+        {
+            RightHandConstraint.RemoveSource(0);
+        }
+        rightHandconstraintSource.weight = 1f;
+        rightHandconstraintSource.sourceTransform = gun.gameObject.transform.Find("RightHandTarget");
+        Debug.Log("rightsource:"+rightHandconstraintSource);
+        Debug.Log(gun.gameObject.transform.Find("RightHandTarget"));
+        RightHandConstraint.AddSource(rightHandconstraintSource);
+        RightHandConstraint.constraintActive = true;
+       // RightHandConstraint.transform.localRotation = Quaternion.Euler(-90, 0, 0);
     }
 
     public void DropDown()
-    { 
-    
-        
+    {
+        if (gunController is not null)
+        {
+            gunController.DropDown();
+        }
+        equipped = false;
+        slotFull = false;
+
     }
 }
