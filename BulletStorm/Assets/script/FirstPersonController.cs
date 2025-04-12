@@ -53,12 +53,14 @@ public class FirstPersonController : MonoBehaviour
     void FixedUpdate()
     {
         Move();
+       
     }
 
     public void HandleInput()
     {
         PickUp();
         DropDown();
+        Shoot();
     }
 
     private void HandleCamera()
@@ -121,6 +123,17 @@ public class FirstPersonController : MonoBehaviour
                     slotFull = true;
                 }
             }
+        }
+    }
+
+    private void Shoot()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit) &&
+            hit.collider != null &&
+            Input.GetMouseButtonDown(0))
+        {
+            gunController.Shoot();
         }
     }
 

@@ -7,11 +7,21 @@ public class IKController : MonoBehaviour
     public Animator animator;
     Transform rightHandTarget;
     Transform leftHandTarget;
-
+    public Transform aimTarget; // Ez az ami követi az egeret
+    public Transform gunHolder; // Ez a gun parentje
+    public float maxTiltAngle = 10f; // Max dõlés szög
+    public float tiltSpeed = 5f;
+    private Quaternion initialRotation;
     private void Awake()
     {
         rightHandTarget = null;
-        leftHandTarget =null;
+        leftHandTarget = null;
+
+    }
+    private void Start()
+    {
+        if (gunHolder != null)
+            initialRotation = gunHolder.localRotation;
     }
 
     void OnAnimatorIK(int layerIndex)
@@ -30,6 +40,15 @@ public class IKController : MonoBehaviour
             }
 
             // Bal kéz mozgásának beállítása (ha támogatott)
+            if (gunHolder == null || aimTarget == null) return;
+            else 
+            {
+                Vector3 localTargetDir = gunHolder.InverseTransformPoint(aimTarget.position);
+
+                float tiltAmount = Mathf.Clamp(localTargetDir.y * maxTiltAngle, -maxTiltAngle, maxTiltAngle);
+                Quaternion targetRotation = initialRotation * Quaternion.Euler(-tiltAmount, 0f, 0f);
+                gunHolder.localRotation = Quaternion.Slerp(gunHolder.localRotation, targetRotation, Time.deltaTime * tiltSpeed);
+            }
 
             if (leftHandTarget != null)
             {
