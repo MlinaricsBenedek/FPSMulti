@@ -59,6 +59,10 @@ public class FirstPersonController : MonoBehaviour
     {
         PickUp();
         DropDown();
+        if (slotFull is true)
+        {
+           Shoot();
+        }
     }
 
     private void HandleCamera()
@@ -106,15 +110,12 @@ public class FirstPersonController : MonoBehaviour
             hit.collider != null &&
             Input.GetKey(KeyCode.E))
         {
-            Debug.Log(slotFull);
             if (slotFull is false)
             {
-                Debug.Log("lefutott a pickup!!!");
                 gunController = hit.collider.GetComponent<GunController>();
-                //GetRotationConstraints(gunController);
                 if (gunController != null)
                 {
-                    Debug.Log("Fegyver találva, PickUp meghívva");
+
                     gunController.PickUp();
                     GetRotationConstraints(gunController);
                     equipped = true;
@@ -124,30 +125,44 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+    private void Shoot()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit) &&
+            hit.collider != null &&
+            Input.GetMouseButtonDown(0))
+        {
+            gunController.Shoot();
+        }
+    }
+
     public void GetRotationConstraints(GunController gun)
     {
-        ConstraintSource leftHandconstraintSource = new();
         while (LeftHandConstraint.sourceCount > 0)
         {
             LeftHandConstraint.RemoveSource(0);
         }
-        Debug.Log(gun.name);
-        leftHandconstraintSource.weight = 1f;
-        leftHandconstraintSource.sourceTransform = gun.gameObject.transform.Find("LeftHandTarget");
+
+        ConstraintSource leftHandconstraintSource = new()
+        {
+            weight = 1f,
+            sourceTransform = gun.gameObject.transform.Find("LeftHandTarget"),
+        };
         IKController.SetLeftHandTargetTransform(leftHandconstraintSource.sourceTransform);
-        Debug.Log("Az átadandó érték: "+gun.gameObject.transform.Find("LeftHandTarget"));
         LeftHandConstraint.AddSource(leftHandconstraintSource);
 
-        ConstraintSource rightHandconstraintSource = new();
         while (RightHandConstraint.sourceCount > 0)
         {
             RightHandConstraint.RemoveSource(0);
         }
-        rightHandconstraintSource.weight = 1f;
-        rightHandconstraintSource.sourceTransform = gun.gameObject.transform.Find("RightHandTarget");
+
+        ConstraintSource rightHandconstraintSource = new()
+        {
+            weight = 1f,
+            sourceTransform = gun.gameObject.transform.Find("RightHandTarget"),
+        };
+       
         IKController.SetRightHandTargetTransform(rightHandconstraintSource.sourceTransform);
-        Debug.Log("rightsource:" + rightHandconstraintSource);
-        Debug.Log(gun.gameObject.transform.Find("RightHandTarget"));
         RightHandConstraint.AddSource(rightHandconstraintSource);
         RightHandConstraint.constraintActive = true;
     }
