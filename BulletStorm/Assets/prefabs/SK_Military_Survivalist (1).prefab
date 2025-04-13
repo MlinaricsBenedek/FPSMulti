@@ -3033,6 +3033,7 @@ GameObject:
   - component: {fileID: 1125451270121314797}
   - component: {fileID: 8553073053621673977}
   - component: {fileID: 4019648154561496854}
+  - component: {fileID: 235013633485857430}
   m_Layer: 0
   m_Name: SK_Military_Survivalist (1)
   m_TagString: Untagged
@@ -3268,6 +3269,19 @@ MonoBehaviour:
   - m_Rig: {fileID: 7059780740048667065}
     m_Active: 1
   m_Effectors: []
+--- !u!114 &235013633485857430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5524897366823838737}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb3ffd709f5f7eb4f86eb7d33997ba7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animator: {fileID: 7247804429327161621}
 --- !u!1 &5598265148844378105
 GameObject:
   m_ObjectHideFlags: 0
