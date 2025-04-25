@@ -1,3 +1,4 @@
+using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -59,8 +60,8 @@ public class GunController : MonoBehaviour
             if (Physics.Raycast(spawnPoint.position, direction, out RaycastHit hit, maxDistance))
             {
                 prefab.SetActive(true);
-                GameObject trailGO = Instantiate(prefab, spawnPoint.position, Quaternion.LookRotation(direction));
-
+                // GameObject trailGO = //Instantiate(prefab, spawnPoint.position, Quaternion.LookRotation(direction));
+                GameObject trailGO = PhotonNetwork.Instantiate("TrailRoot", spawnPoint.position, Quaternion.LookRotation(direction));
                 TrailRenderer trail = trailGO.GetComponentInChildren<TrailRenderer>();
 
                 StartCoroutine(SpawnTrail(trail, hit));

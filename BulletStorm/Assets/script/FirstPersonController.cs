@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Animations.Rigging;
@@ -9,29 +10,36 @@ public class FirstPersonController : MonoBehaviour
     public Camera playerCamera;
     public Transform AimTarget;
     public float fov = 60f;
-    public bool cameraCanMove = true;
-    public float mouseSensitivity = 100f;
-    public float maxLookAngle = 50f;
-    public bool lockCursor = true;
+    private bool cameraCanMove = true;
+    private float mouseSensitivity = 100f;
+    private float maxLookAngle = 50f;
+    private bool lockCursor = true;
     private float yaw = 0.0f;
     private float pitch = 0.0f;
-    public bool playerCanMove = true;
-    public float walkSpeed = 5f;
-    public float maxVelocityChange = 5.0f;
+    private bool playerCanMove = true;
+    private float walkSpeed = 5f;
+    private float maxVelocityChange = 5.0f;
     float zDinstance = 10f;
-    public bool slotFull;
-    public bool equipped;
-    public float dropForwardForce = 10f;
-    public float dropUpwardForce =10f;
-    public Transform GunPosition;
+    private bool slotFull;
+    private bool equipped;
+    private float dropForwardForce = 10f;
+    private float dropUpwardForce =10f;
+    private Transform GunPosition;
     GunController gunController;
     [SerializeField] RotationConstraint LeftHandConstraint;
     [SerializeField] RotationConstraint RightHandConstraint;
     IKController IKController;
+    private float currentHeal;
+    PlayerManager playerManager;
+    PhotonView PV;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         playerCamera.fieldOfView = fov;
+        PV = GetComponent<PhotonView>();
+        playerManager = PhotonView.Find((int)PV.InstantiationData[0]).GetComponent<PlayerManager>();
+        GunPosition = GetComponentInChildren<Transform>().Find("GunPosition");
     }
 
     void Start()
@@ -40,19 +48,46 @@ public class FirstPersonController : MonoBehaviour
         slotFull = false;
         equipped =false;
         IKController = GetComponent<IKController>();
+        currentHeal = 100;
+        if (!PV.IsMine)
+        {
+            Destroy(GetComponentInChildren<Camera>());
+        }
+        RotationConstraint[] constraints = GetComponentsInChildren<RotationConstraint>(true);
+
+        foreach (RotationConstraint constraint in constraints)
+        {
+            if (constraint.gameObject.name == "")
+            {
+                Debug.Log("Megtaláltam az elsõ constraintet: " + constraint.name);
+                // Itt csinálhatsz vele bármit, pl. engedélyezheted
+                constraint.enabled = true;
+            }
+            else if (constraint.gameObject.name == "MásodikConstraintNeve")
+            {
+                Debug.Log("Megtaláltam a második constraintet: " + constraint.name);
+                constraint.enabled = false;
+            }
+        }
     }
 
     float camRotation;
 
     private void Update()
     {
-        HandleCamera();
-        HandleInput();
+        if (PV.IsMine)
+        {
+            HandleCamera();
+            HandleInput();
+        }
     }
 
     void FixedUpdate()
     {
-        Move();
+        if (PV.IsMine)
+        {
+            Move();
+        }
     }
 
     public void HandleInput()
@@ -67,6 +102,7 @@ public class FirstPersonController : MonoBehaviour
 
     private void HandleCamera()
     {
+        
         yaw = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * mouseSensitivity;
         pitch -= mouseSensitivity * Input.GetAxis("Mouse Y");
         pitch = Mathf.Clamp(pitch, -maxLookAngle, maxLookAngle);
@@ -133,6 +169,8 @@ public class FirstPersonController : MonoBehaviour
             Input.GetMouseButtonDown(0))
         {
             gunController.Shoot();
+            FirstPersonController enemy = hit.collider.GetComponent<FirstPersonController>();
+            enemy.TakeDamage(20);
         }
     }
 
@@ -180,5 +218,31 @@ public class FirstPersonController : MonoBehaviour
         equipped = false;
         slotFull = false;
         }
+    }
+
+    public void TakeDamage(float damage)
+    {
+        Debug.Log("beleptunk a takedamagebe");
+        PV.RPC(nameof(RPC_TakeDamage), PV.Owner, damage);
+    }
+
+    [PunRPC]
+    void RPC_TakeDamage(float damage)
+    {
+        Debug.Log("beleptunk az RPC_TAKEDAMAGE-be!!!!");
+        if (currentHeal > damage)
+        {
+            currentHeal -= damage;
+        }
+        else
+        {
+            currentHeal = 0;
+            Die();
+        }
+    }
+    void Die()
+    {
+        Debug.Log("the player die");
+        playerManager.Die();
     }
 }
