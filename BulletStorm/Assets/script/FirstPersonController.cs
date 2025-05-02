@@ -11,7 +11,7 @@ public class FirstPersonController : MonoBehaviour
     public Transform AimTarget;
     public float fov = 60f;
     private bool cameraCanMove = true;
-    private float mouseSensitivity = 100f;
+    private float mouseSensitivity = 10f;
     private float maxLookAngle = 50f;
     private bool lockCursor = true;
     private float yaw = 0.0f;
@@ -24,10 +24,10 @@ public class FirstPersonController : MonoBehaviour
     private bool equipped;
     private float dropForwardForce = 10f;
     private float dropUpwardForce =10f;
-    private Transform GunPosition;
+    [SerializeField] public Transform GunPosition;
     GunController gunController;
-    [SerializeField] RotationConstraint LeftHandConstraint;
-    [SerializeField] RotationConstraint RightHandConstraint;
+    RotationConstraint LeftHandConstraint;
+    RotationConstraint RightHandConstraint;
     IKController IKController;
     private float currentHeal;
     PlayerManager playerManager;
@@ -39,7 +39,7 @@ public class FirstPersonController : MonoBehaviour
         playerCamera.fieldOfView = fov;
         PV = GetComponent<PhotonView>();
         playerManager = PhotonView.Find((int)PV.InstantiationData[0]).GetComponent<PlayerManager>();
-        GunPosition = GetComponentInChildren<Transform>().Find("GunPosition");
+        
     }
 
     void Start()
@@ -57,16 +57,15 @@ public class FirstPersonController : MonoBehaviour
 
         foreach (RotationConstraint constraint in constraints)
         {
-            if (constraint.gameObject.name == "")
+            if (constraint.gameObject.name == "hand_r")
             {
-                Debug.Log("Megtaláltam az elsõ constraintet: " + constraint.name);
-                // Itt csinálhatsz vele bármit, pl. engedélyezheted
                 constraint.enabled = true;
+                RightHandConstraint = constraint;
             }
-            else if (constraint.gameObject.name == "MásodikConstraintNeve")
+            else if (constraint.gameObject.name == "hand_l")
             {
-                Debug.Log("Megtaláltam a második constraintet: " + constraint.name);
-                constraint.enabled = false;
+                constraint.enabled = true;
+                LeftHandConstraint = constraint;
             }
         }
     }
@@ -87,6 +86,10 @@ public class FirstPersonController : MonoBehaviour
         if (PV.IsMine)
         {
             Move();
+            if (gunController is not null)
+            { 
+                gunController.GetDirection(playerCamera.transform);
+            }
         }
     }
 
@@ -140,19 +143,21 @@ public class FirstPersonController : MonoBehaviour
     }
 
     public void PickUp()
-    {        
+    {
+        int gunLayerMask = LayerMask.GetMask("GUN");
         RaycastHit hit;
-        if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit) &&
+        if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit,100f,gunLayerMask) &&
             hit.collider != null &&
             Input.GetKey(KeyCode.E))
         {
             if (slotFull is false)
             {
                 gunController = hit.collider.GetComponent<GunController>();
+                Debug.Log("GUn controller" + gunController);
                 if (gunController != null)
                 {
-
-                    gunController.PickUp();
+                    Debug.Log("gun position fps: " + GunPosition.gameObject.name);
+                    gunController.PickUp(GunPosition);
                     GetRotationConstraints(gunController);
                     equipped = true;
                     slotFull = true;
@@ -163,13 +168,19 @@ public class FirstPersonController : MonoBehaviour
 
     private void Shoot()
     {
+        int playerLayerMask = LayerMask.GetMask("Player");
         RaycastHit hit;
-        if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit) &&
+        if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit,100f, playerLayerMask) &&
             hit.collider != null &&
             Input.GetMouseButtonDown(0))
         {
             gunController.Shoot();
             FirstPersonController enemy = hit.collider.GetComponent<FirstPersonController>();
+            Debug.Log("Hit object: " + hit.collider.gameObject.name);
+            if (hit.collider.tag =="GUN")
+            {
+                Debug.Log("nem talaljuk az enemyt.");
+            }
             enemy.TakeDamage(20);
         }
     }
@@ -188,6 +199,7 @@ public class FirstPersonController : MonoBehaviour
         };
         IKController.SetLeftHandTargetTransform(leftHandconstraintSource.sourceTransform);
         LeftHandConstraint.AddSource(leftHandconstraintSource);
+        LeftHandConstraint.constraintActive = true;
 
         while (RightHandConstraint.sourceCount > 0)
         {
@@ -240,9 +252,12 @@ public class FirstPersonController : MonoBehaviour
             Die();
         }
     }
+
     void Die()
     {
         Debug.Log("the player die");
         playerManager.Die();
     }
+
+    
 }

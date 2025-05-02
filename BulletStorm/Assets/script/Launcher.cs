@@ -230,27 +230,7 @@ public class Launcher : MonoBehaviourPunCallbacks
             Debug.Log("Visszaszámlálás megszakítva.");
         }
     }
-    //public void Timer()
-    //{
-    //    Debug.Log("time finished:" + isTimeFinish);
-    //    Debug.Log("full room" + isRoomFull);
-    //    if (isRoomFull)
-    //    {
-    //        Debug.Log("hatra levo ido:" + remainingTime);
-    //        if (remainingTime > 0)
-    //        {
-    //            remainingTime -= Time.deltaTime;
-    //            int seconds = Mathf.FloorToInt(remainingTime);
-    //            timerText.text = string.Format("{0}", seconds);
-    //        }
-    //        else
-    //        {
-    //            Debug.Log("Most váltunk scene-t");
-    //            isTimeFinish = false;
-    //            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-    //        }
-    //    }
-    //}
+
 
     public void PlayTheGame()
     {

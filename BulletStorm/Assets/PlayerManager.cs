@@ -29,19 +29,6 @@ public class PlayerManager : MonoBehaviour
         Assist = 0;
     }
   
-    public void CountKills()
-    {
-        //if()
-        Kills++;
-
-    }
-    
-    public void CountAssist()
-    {
-        Assist++;
-    }
-    // Update is called once per frame
-    
     void CreateController()
     {
         if (scene.buildIndex == 1)
