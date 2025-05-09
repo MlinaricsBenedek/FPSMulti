@@ -23,6 +23,7 @@ public class Launcher : MonoBehaviourPunCallbacks
     PhotonView _photonView;
     Coroutine countdownCoroutine;
     private bool isPlayerLeftRoom; 
+    
     void Start()
     {
         _photonView = GetComponent<PhotonView>();

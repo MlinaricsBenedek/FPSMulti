@@ -34,7 +34,6 @@ public class Authentication : MonoBehaviour
     [SerializeField] TMP_Text emailForToken;
     private readonly JsonSerializerSettings serializerSettings = new();
    
-    
     public async void Login()
     {
         var data = new LoginDto
