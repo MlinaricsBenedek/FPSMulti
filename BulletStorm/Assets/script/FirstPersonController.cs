@@ -1,4 +1,6 @@
 using Photon.Pun;
+using Photon.Realtime;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Animations.Rigging;
@@ -32,7 +34,8 @@ public class FirstPersonController : MonoBehaviour
     private float currentHeal;
     PlayerManager playerManager;
     PhotonView PV;
-
+    Dictionary<Player, float> damageDealers = new();
+    Dictionary<Player, float> damageTimestamps = new();
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -174,14 +177,13 @@ public class FirstPersonController : MonoBehaviour
             hit.collider != null &&
             Input.GetMouseButtonDown(0))
         {
+
             gunController.Shoot();
             FirstPersonController enemy = hit.collider.GetComponent<FirstPersonController>();
-            Debug.Log("Hit object: " + hit.collider.gameObject.name);
-            if (hit.collider.tag =="GUN")
+            if (enemy != null && enemy != this)
             {
-                Debug.Log("nem talaljuk az enemyt.");
+                enemy.TakeDamage(60);
             }
-            enemy.TakeDamage(20);
         }
     }
 
@@ -231,7 +233,6 @@ public class FirstPersonController : MonoBehaviour
         slotFull = false;
         }
     }
-
     public void TakeDamage(float damage)
     {
         Debug.Log("beleptunk a takedamagebe");
@@ -239,8 +240,22 @@ public class FirstPersonController : MonoBehaviour
     }
 
     [PunRPC]
-    void RPC_TakeDamage(float damage)
+    void RPC_TakeDamage(float damage, PhotonMessageInfo info)
     {
+        Player attacker = info.Sender;
+
+        if (damageDealers.ContainsKey(attacker))
+        {
+            damageDealers[attacker] += damage;
+            damageTimestamps[attacker] = Time.time;
+        }
+
+        else
+        {
+            damageDealers.Add(attacker, damage);
+            damageTimestamps.Add(attacker, Time.time);
+        }
+
         Debug.Log("beleptunk az RPC_TAKEDAMAGE-be!!!!");
         if (currentHeal > damage)
         {
@@ -250,14 +265,105 @@ public class FirstPersonController : MonoBehaviour
         {
             currentHeal = 0;
             Die();
+
+            PlayerManager.Find(attacker).GetKill();
+        }
+        HandleAssits(attacker);
+    }
+
+    public void HandleAssits(Player killer)
+    {
+        foreach (var pair in damageDealers)
+        {
+            Player assister = pair.Key;
+
+            if (assister == killer) continue;
+
+            float lastHitTime = damageTimestamps[assister];
+            if (Time.time - lastHitTime <= 100f) 
+            {
+                PlayerManager assistManager = PlayerManager.Find(assister);
+                if (assistManager != null)
+                {
+                    PhotonView assistPV = assistManager.GetComponent<PhotonView>();
+                    assistPV.RPC("RPC_GetAssist", assister);
+                }
+            }
         }
     }
+    //public void TakeDamage(int damage)
+    //{
+    //    Debug.Log("beleptunk a takedamagebe");
+    //    PV.RPC(nameof(RPC_TakeDamage), RpcTarget.All, damage);
+    //}
+
+    //[PunRPC]
+    //void RPC_TakeDamage(int damage, PhotonMessageInfo info)
+    //{
+    //    Player attacker = info.Sender;
+
+    //    if (damageDealers.ContainsKey(attacker))
+    //    {
+    //        damageDealers[attacker] += damage;
+    //        damageTimestamps[attacker] = Time.time;
+    //    }
+
+    //    else
+    //    {
+    //        damageDealers.Add(attacker, damage);
+    //        damageTimestamps.Add(attacker, Time.time);
+    //    }
+
+    //    if (currentHeal > damage)
+    //    {
+    //        Debug.Log("Beleptunk az if-be if (currentHeal > damage)");
+    //        currentHeal -= damage;
+    //        Debug.Log(damageDealers);
+
+    //    }
+    //    else
+    //    {
+    //        currentHeal = 0;
+    //        Die();
+    //        PlayerManager.Find(attacker).GetKill();
+    //        foreach (var pair in damageDealers)
+    //        {
+    //            Debug.Log("beleptunk a foreachbe");
+    //            if (pair.Key != attacker)
+    //            {
+    //                Debug.Log("beleptunk az if-be beleptunk a foreachbe ");
+    //                float lastHitTime = damageTimestamps[pair.Key];
+    //                PlayerManager assistManager = PlayerManager.Find(pair.Key);
+    //                if (Time.time - lastHitTime <= 1265f)
+    //                {
+    //                    Debug.Log("Assist time valid: sending RPC");
+
+    //                    PhotonView assistPV = assistManager.GetComponent<PhotonView>();
+    //                    assistPV.RPC("RPC_GetAssist", pair.Key);
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
+    //[PunRPC]
+    //void RPC_TakeDamage(int damage)
+    //{
+    //    Debug.Log("beleptunk az RPC_TAKEDAMAGE-be!!!!");
+    //    if (currentHeal > damage)
+    //    {
+    //        currentHeal -= damage;
+    //    }
+    //    else
+    //    {
+    //        currentHeal = 0;
+    //        Die();
+    //    }
+    //}
 
     void Die()
     {
         Debug.Log("the player die");
+
         playerManager.Die();
     }
-
-    
 }

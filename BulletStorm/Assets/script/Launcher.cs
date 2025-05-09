@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 public class Launcher : MonoBehaviourPunCallbacks
 {
     // Start is called before the first frame update4
-    const int playerCount = 2;
+    const int playerCount = 3;
     public TMP_Text errorMessage;
     public TMP_Text roomName;
     public TMP_Text timerText;
@@ -30,7 +30,6 @@ public class Launcher : MonoBehaviourPunCallbacks
         isInLobby = false;
         if (!isSuccessfull)
         {
-            Debug.Log("Startnál elbukott");
             MenuManager.Instance.OpenMenu("ErrorMenu");
         }
         timerText.gameObject.SetActive(false);
@@ -39,12 +38,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public override void OnConnectedToMaster()
     {
-        Debug.Log("csatlakoztunk a masterhez");
         bool isConnected = PhotonNetwork.JoinLobby();
-        if (!isConnected)
-        {
-            Debug.Log("OnConnectedToMaster()-nél elbukott");
-        }
         PhotonNetwork.AutomaticallySyncScene = true;
     }
 
@@ -52,8 +46,6 @@ public class Launcher : MonoBehaviourPunCallbacks
     {
         isInLobby = true;
         MenuManager.Instance.OpenMenu("Default");
-       // CheckRooms();
-        Debug.Log("We joined to the lobby");
     }
 
     public void CheckRooms()
@@ -66,13 +58,12 @@ public class Launcher : MonoBehaviourPunCallbacks
     {
         RoomOptions roomOptions = new RoomOptions { MaxPlayers = playerCount };
         PhotonNetwork.CreateRoom(null, roomOptions); // null -> automatikus név
-        Debug.Log("Létrehoztunk egy szobát.");
     }
 
-    public override void OnCreatedRoom()
-    {
-        Debug.Log("Már létre van hozva a szoba!!!");
-    }
+    //public override void OnCreatedRoom()
+    //{
+    //    Debug.Log("Már létre van hozva a szoba!!!");
+    //}
 
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
@@ -84,23 +75,16 @@ public class Launcher : MonoBehaviourPunCallbacks
     {
         if (PhotonNetwork.IsConnectedAndReady == false || PhotonNetwork.Server != ServerConnection.MasterServer || !isInLobby)
         {
-            bool master1=PhotonNetwork.Server == ServerConnection.MasterServer;
-            bool master2 = PhotonNetwork.IsConnectedAndReady;
-            Debug.Log("PhotonNetwork.Server != ServerConnection.MasterServer" + master1);
-            Debug.Log("PhotonNetwork.IsConnectedAndReady "+master2);
-            Debug.Log("Lobbyba vagyunk: " + isInLobby);
             return;
         }
 
         PhotonNetwork.JoinRandomRoom();
         MenuManager.Instance.OpenMenu("Loading");
-        Debug.Log("Attempting to join a random room...");
     }
 
     public override void OnJoinedRoom()
     {
         
-        Debug.Log("csatlakoztunk a szobához!");
         MenuManager.Instance.OpenMenu("Default");
         roomName.text = PhotonNetwork.CurrentRoom.Name;
         PhotonNetwork.NickName = "Player" + UnityEngine.Random.Range(0, 1000).ToString("0000");
@@ -175,7 +159,6 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public override void OnLeftRoom()
     {
-        Debug.Log("We left the room");
         MenuManager.Instance.OpenMenu("Default");
     }
 
@@ -194,7 +177,7 @@ public class Launcher : MonoBehaviourPunCallbacks
     {
         if (!isRoomFull) // csak ha még nem indult el
         {
-            countdownCoroutine = StartCoroutine(StartCountdown(30f)); // 30 másodperces visszaszámlálás
+            countdownCoroutine = StartCoroutine(StartCountdown(5f)); // 30 másodperces visszaszámlálás
         }
     }
 

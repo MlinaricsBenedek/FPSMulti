@@ -45,6 +45,9 @@ MonoBehaviour:
   - SyncPlayerLeftRoom
   - RPC_PickUp
   - Timer
+  - RPC_GetKilled
+  - RPC_GetAssist
+  - GetAssist
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
