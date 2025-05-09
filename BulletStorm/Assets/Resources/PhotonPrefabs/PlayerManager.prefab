@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Kills: 0
+  Death: 0
   Assist: 0
 --- !u!114 &4815305988367966941
 MonoBehaviour:

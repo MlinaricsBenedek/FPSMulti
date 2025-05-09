@@ -5134,13 +5134,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee2fbd0a38faf3e47b8c2da213f449bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gunPosition: {fileID: 0}
   dropForwardForce: 10
   dropUpwardForce: 10
-  playerCamera: {fileID: 0}
   muzzleFlash: {fileID: 9007863178831603155}
   impact: {fileID: 6237951738224332100, guid: bbb443b8afcddf3409e989b3ee3e9dfc, type: 3}
-  prefab: {fileID: 1817000011090323472, guid: 372e44ef73a68b847bd69c276b688df3, type: 3}
+  prefab: {fileID: 1817000011090323472, guid: 4423ef0b5ba039b4895af20469f7cef5, type: 3}
   spawnPoint: {fileID: 171981310985736816}
 --- !u!1 &8395135988813246452
 GameObject:

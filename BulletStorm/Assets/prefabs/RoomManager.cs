@@ -20,7 +20,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
         }
         DontDestroyOnLoad(gameObject);
         Instance = this;
-        Scene scene = SceneManager.GetActiveScene(); ;
+        Scene scene = SceneManager.GetActiveScene(); 
     }
 
     public override void OnEnable()

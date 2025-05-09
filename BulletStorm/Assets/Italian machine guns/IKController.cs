@@ -7,8 +7,8 @@ public class IKController : MonoBehaviour
     public Animator animator;
     Transform rightHandTarget;
     Transform leftHandTarget;
-    public Transform aimTarget; // Ez az ami követi az egeret
-    public Transform gunHolder; // Ez a gun parentje
+    Transform aimTarget; // Ez az ami követi az egeret
+    Transform gunHolder; // Ez a gun parentje
     public float maxTiltAngle = 10f; // Max dõlés szög
     public float tiltSpeed = 5f;
     private Quaternion initialRotation;
@@ -16,7 +16,8 @@ public class IKController : MonoBehaviour
     {
         rightHandTarget = null;
         leftHandTarget = null;
-
+        aimTarget = GetComponentInChildren<Transform>().Find("AimTarget");
+        gunHolder = GetComponentInChildren<Transform>().Find("GunPosition");
     }
     private void Start()
     {
@@ -28,18 +29,13 @@ public class IKController : MonoBehaviour
     {
         if (animator)
         {
-            Debug.Log("IK-ban lévõ adat jobb kéz: "+rightHandTarget);
-            // Jobb kéz mozgásának beállítása
             if (rightHandTarget != null)
             {
-                Debug.Log("itt már lefut az Ik script");
                 animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1);
                 animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1);
                 animator.SetIKPosition(AvatarIKGoal.RightHand, rightHandTarget.position);
                 animator.SetIKRotation(AvatarIKGoal.RightHand, rightHandTarget.rotation);
             }
-
-            // Bal kéz mozgásának beállítása (ha támogatott)
             if (gunHolder == null || aimTarget == null) return;
             else 
             {
@@ -51,8 +47,7 @@ public class IKController : MonoBehaviour
             }
 
             if (leftHandTarget != null)
-            {
-                Debug.Log("itt már lefut az Ik script");
+            { 
                 animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
                 animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1);
                 animator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandTarget.position);
