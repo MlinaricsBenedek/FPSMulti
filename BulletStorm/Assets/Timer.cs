@@ -24,6 +24,7 @@ public class Timer : MonoBehaviourPunCallbacks
         base.OnDisable();
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
+
     void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
     {
         if (scene.buildIndex == 1)
@@ -48,7 +49,7 @@ public class Timer : MonoBehaviourPunCallbacks
             yield return new WaitForSeconds(1f); 
             remainingTime -= 1f;
         }
-
+        MatchController.Instance.SaveDatas();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
