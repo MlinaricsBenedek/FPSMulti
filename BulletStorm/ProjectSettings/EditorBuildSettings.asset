@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/RPG_FPS_game_assets_industrial/Map_v1.unity
     guid: 5a463281e6e238742a45430f11e82829
+  - enabled: 1
+    path: Assets/animations/GameOwer.unity
+    guid: e0c716260aa8ab641a169961e0f931ea
   m_configObjects: {}
