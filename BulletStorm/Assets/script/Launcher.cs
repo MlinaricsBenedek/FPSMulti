@@ -1,29 +1,39 @@
+using ExitGames.Client.Photon;
+using ExitGames.Client.Photon.StructWrapping;
 using Photon.Pun;
 using Photon.Realtime;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Launcher : MonoBehaviourPunCallbacks
 {
-    // Start is called before the first frame update4
-    const int playerCount = 3;
     public TMP_Text errorMessage;
-    public TMP_Text roomName;
+
     public TMP_Text timerText;
-    public float remainingTime=30;
+    public float remainingTime = 30;
     public bool isRoomFull = false;
     public bool isTimeFinish = true;
     public TMP_Text[] userNames;
-    Player player;
+
     private bool isInLobby;
     PhotonView _photonView;
     Coroutine countdownCoroutine;
-    private bool isPlayerLeftRoom; 
-    
+    private bool isPlayerLeftRoom;
+    List<Player> lobby = new List<Player>();
+    const int tolarence = 70;
+    const int playerCount = 6;
+    float playerElo = 0f;
+    string currentRoomName;
+    string prevRoomName;
+    bool isJoiningRoom;
+    bool basicClient;
     void Start()
     {
         _photonView = GetComponent<PhotonView>();
@@ -35,75 +45,215 @@ public class Launcher : MonoBehaviourPunCallbacks
         }
         timerText.gameObject.SetActive(false);
         isPlayerLeftRoom = false;
+        isJoiningRoom=false;
+        basicClient = false;
     }
-
+   
     public override void OnConnectedToMaster()
     {
+        
         bool isConnected = PhotonNetwork.JoinLobby();
+        if (isJoiningRoom)
+        {
+            CreateRoom(currentRoomName);
+        }
         PhotonNetwork.AutomaticallySyncScene = true;
     }
 
     public override void OnJoinedLobby()
     {
         isInLobby = true;
+        
         MenuManager.Instance.OpenMenu("Default");
     }
 
-    public void CheckRooms()
+    public void CreateRoom(string roomName)
     {
-        if (!isInLobby) return;
-        JoinRoom();
+        if (PhotonNetwork.CurrentRoom.Name == "Lobby" && PhotonNetwork.InRoom)
+        {
+            prevRoomName = "Lobby";
+            PhotonNetwork.LeaveRoom();
+        }
+        if (basicClient == true)
+        {
+            PhotonNetwork.JoinRoom(currentRoomName);
+        }
+        RoomOptions roomOptions = new RoomOptions();
+        roomOptions.MaxPlayers = playerCount;
+        
+        PhotonNetwork.JoinOrCreateRoom(roomName, roomOptions,TypedLobby.Default); 
     }
 
-    public void CreateRoom()
+    public void AddPlayer()
     {
-        RoomOptions roomOptions = new RoomOptions { MaxPlayers = playerCount };
-        PhotonNetwork.CreateRoom(null, roomOptions); // null -> automatikus név
+        Debug.Log($"[Lobby] {PhotonNetwork.LocalPlayer.NickName} belépett a lobbyba. Jelenlegi lobby létszám: {lobby.Count}");
+        bool eloExist = PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("ELO", out object ELO);
+        if (!eloExist)
+        {
+            Debug.Log("There are no elo");
+            return;
+        }
+        float elo = (float)ELO;
+       
+
+        var combinations = MatchMaker.Instance.FindMatchingTeams(PhotonNetwork.LocalPlayer, lobby);
+        float minELO = float.MaxValue;
+        float maxELO = 0;
+        foreach ( var combination in combinations ) 
+        {
+            Debug.Log(combinations.Count);
+            if (minELO - elo > -tolarence && maxELO - elo < tolarence)
+            {
+                Debug.Log("megfelelõ találat:" );
+                List<Player> redTeam;
+                List<Player> blueTeam;
+                List<Player> teams = TeamController.CreateTeams(combination, out blueTeam, out redTeam);
+                for (int i = 0; i < teams.Count; i++)
+                {
+                    if (i < 3)
+                    {
+                        redTeam.Add(teams[i]);
+                    }
+                    else
+                    {
+                        blueTeam.Add(teams[i]);
+                    }
+                }
+                CreateMatch(blueTeam, redTeam);
+
+                foreach (var playerInTheMatch in combination)
+                {
+                    lobby.Remove(playerInTheMatch);
+                }
+            }        
+        }
     }
 
-    //public override void OnCreatedRoom()
-    //{
-    //    Debug.Log("Már létre van hozva a szoba!!!");
-    //}
+    [PunRPC]
+    void RPC_JoinLobby(PhotonMessageInfo info)
+    {
+        Player requestingPlayer = info.Sender;
+        lobby.Add(requestingPlayer);
+
+        AddPlayer();
+    }
+
+    public void CreateMatch(List<Player> blueTeam,List<Player> redTeam)
+    {
+        currentRoomName = $"Match_{Guid.NewGuid().ToString().Substring(0, 5)}";
+        Debug.Log($"[Photon] Szoba létrehozása: {currentRoomName}");
+        foreach (var player in redTeam)
+        {
+            if (player == PhotonNetwork.LocalPlayer)
+            {
+                ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
+                props["team"] = "redTeam";
+                player.SetCustomProperties(props);
+            }
+            else
+            {
+                photonView.RPC("RPC_SetTeams", player, "red");
+            }
+        }
+
+        foreach (var player in blueTeam)
+        {
+            if (player == PhotonNetwork.LocalPlayer)
+            {
+                ExitGames.Client.Photon.Hashtable props = new ExitGames.Client.Photon.Hashtable();
+                props["team"] = "blueTeam";
+                props["currentRoomName"] = currentRoomName;
+                player.SetCustomProperties(props);
+            }
+            else
+            {
+                photonView.RPC("RPC_SetTeams", player, "blue");
+            }
+        }
+        if (PhotonNetwork.CurrentRoom.Name =="Lobby"&&PhotonNetwork.InRoom)
+        {
+            prevRoomName = "Lobby";
+            PhotonNetwork.LeaveRoom(); 
+        }
+      
+
+        foreach (var player in redTeam.Concat(blueTeam))
+        {
+            if (player != PhotonNetwork.LocalPlayer)
+            {
+                _photonView.RPC("GetRoomByName", player, currentRoomName);
+            }
+        }
+    }
+
+    public void HandleLobbyRoom(float elo)
+    {
+        RoomOptions roomOptions = new RoomOptions();
+        TypedLobby typedLobby = new TypedLobby("Lobby",LobbyType.Default);
+        PhotonNetwork.JoinOrCreateRoom("lobby",roomOptions,typedLobby);
+    }
+
+
+    [PunRPC]
+    void GetRoomByName(string roomName)
+    {
+        PhotonNetwork.JoinRoom(roomName);
+    }
+
+    [PunRPC]
+    void RPC_SetTeams(string team)
+    {
+        PhotonNetwork.LocalPlayer.SetCustomProperties(new ExitGames.Client.Photon.Hashtable() { { "team", team } });
+    }
+
+    public async void GetPlayerElo()
+    {
+        
+        playerElo = await ApiHandler.instance.GetUserStatisticsAsync(TokenController.Token);
+        if (playerElo == 0)
+        {
+            Debug.Log("There no elo");
+        }
+        Debug.Log("elo" + playerElo);
+        ExitGames.Client.Photon.Hashtable ELO = new ExitGames.Client.Photon.Hashtable();
+        ELO["ELO"] = playerElo;
+        PhotonNetwork.LocalPlayer.SetCustomProperties(ELO);
+        HandleLobbyRoom(playerElo);
+    }
 
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
         MenuManager.Instance.OpenMenu("ErrorMenu");
         errorMessage.text = "RoomJoined Failed" + message;
     }
-
-    public void JoinRoom()
-    {
-        if (PhotonNetwork.IsConnectedAndReady == false || PhotonNetwork.Server != ServerConnection.MasterServer || !isInLobby)
-        {
-            return;
-        }
-
-        PhotonNetwork.JoinRandomRoom();
-        MenuManager.Instance.OpenMenu("Loading");
-    }
-
+    
     public override void OnJoinedRoom()
     {
-        
-        MenuManager.Instance.OpenMenu("Default");
-        roomName.text = PhotonNetwork.CurrentRoom.Name;
-        PhotonNetwork.NickName = "Player" + UnityEngine.Random.Range(0, 1000).ToString("0000");
-        int index = 0;
-        foreach (Player player in PhotonNetwork.PlayerList)
+        if (PhotonNetwork.CurrentRoom.Name == "lobby")
         {
-            if (index < userNames.Length)
+            _photonView.RPC("RPC_JoinLobby", RpcTarget.MasterClient);
+        }
+        else
+        {
+
+            MenuManager.Instance.OpenMenu("Default");
+            PhotonNetwork.NickName = UserInformations.Name;
+            int index = 0;
+            foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
             {
-                userNames[index].text = player.NickName;
-                _photonView.RPC("SyncPlayerName", RpcTarget.All, player.NickName, index);
-                index++;
+                if (index < userNames.Length)
+                {
+                    userNames[index].text = player.NickName;
+                    _photonView.RPC("RPC_SyncPlayerName", RpcTarget.All, player.NickName, index);
+                    index++;
+                }
             }
         }
 
     }
 
     [PunRPC]
-    void SyncPlayerName(string nickName, int index)
+    void RPC_SyncPlayerName(string nickName, int index)
     {
         if (index >= 0 && index < userNames.Length)
         {
@@ -112,9 +262,8 @@ public class Launcher : MonoBehaviourPunCallbacks
     }
     
     [PunRPC]
-    void SyncPlayerLeftRoom(string nickName, int index)
+    void RPC_SyncPlayerLeftRoom(string nickName, int index)
     {
-        Debug.Log(index);
         if (index >= 0 && index < userNames.Length)
         {
             if (userNames[index].text == nickName)
@@ -128,14 +277,11 @@ public class Launcher : MonoBehaviourPunCallbacks
     {
         MenuManager.Instance.OpenMenu("ErrorMenu");
         errorMessage.text = "RoomJoined Failed" + message;
-        CreateRoom();
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
-    {
-        //PlayTheGame();
-        newPlayer.NickName = "Player" + UnityEngine.Random.Range(0, 1000).ToString("0000");
-        Debug.Log("player entered the room");
+    { 
+        newPlayer.NickName =  UserInformations.Name;
         for (int i = 0; i < userNames.Length; i++)
         {
             if (userNames[i].text == "")
@@ -146,7 +292,7 @@ public class Launcher : MonoBehaviourPunCallbacks
         }
         if (PhotonNetwork.CurrentRoom.PlayerCount == playerCount)
         {
-            _photonView.RPC("StartCountdown", RpcTarget.All);
+            _photonView.RPC("StartTimer", RpcTarget.All);
         }
     }
 
@@ -154,35 +300,42 @@ public class Launcher : MonoBehaviourPunCallbacks
     {
         PhotonNetwork.LeaveRoom();
         MenuManager.Instance.OpenMenu("Loading");
-        StopCoroutine(StartCountdown(30f));
+        StopCoroutine(Timer(5f));
         isPlayerLeftRoom=true;
     }
 
     public override void OnLeftRoom()
     {
-        MenuManager.Instance.OpenMenu("Default");
+        if (prevRoomName == "lobby")
+        {
+            isJoiningRoom = true;
+        }
+        else
+        {
+            MenuManager.Instance.OpenMenu("Default");
+        }
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
-        remainingTime = 30f;
-        if (player == otherPlayer)
+        remainingTime = 5f;
+        if (PhotonNetwork.LocalPlayer == otherPlayer)
         {
-            _photonView.RPC("SyncPlayerLeftRoom", RpcTarget.All, otherPlayer.NickName);
+            _photonView.RPC("RPC_SyncPlayerLeftRoom", RpcTarget.All, otherPlayer.NickName);
         }
-        StopCountdown();
+        StopTimer();
     }
 
     [PunRPC]
-    public void StartCountdown()
+    public void StartTimer()
     {
-        if (!isRoomFull) // csak ha még nem indult el
+        if (!isRoomFull) 
         {
-            countdownCoroutine = StartCoroutine(StartCountdown(5f)); // 30 másodperces visszaszámlálás
+            countdownCoroutine = StartCoroutine(Timer(5f)); 
         }
     }
 
-    IEnumerator StartCountdown(float time)
+    IEnumerator Timer(float time)
     {
         if (isPlayerLeftRoom) yield break;
         timerText.gameObject.SetActive(true);
@@ -193,7 +346,7 @@ public class Launcher : MonoBehaviourPunCallbacks
         while (remainingTime > 0)
         {
             timerText.text = Mathf.CeilToInt(remainingTime).ToString();
-            yield return new WaitForSeconds(1f); // vár 1 másodpercet
+            yield return new WaitForSeconds(1f); 
             remainingTime -= 1f;
         }
         if (!isPlayerLeftRoom)
@@ -203,27 +356,14 @@ public class Launcher : MonoBehaviourPunCallbacks
         }
     }
 
-    public void StopCountdown()
+    public void StopTimer()
     {
         if (countdownCoroutine != null)
         {
             isPlayerLeftRoom = true;
             StopCoroutine(countdownCoroutine);
             countdownCoroutine = null;
-            timerText.gameObject.SetActive(false); // opcionális UI cleanup
-            Debug.Log("Visszaszámlálás megszakítva.");
-        }
-    }
-
-
-    public void PlayTheGame()
-    {
-        if (PhotonNetwork.CurrentRoom is not null && PhotonNetwork.CurrentRoom.PlayerCount == playerCount)
-        {
-            JoinRoom();
-            _photonView.RPC(
-                "StartCountdown"
-                , RpcTarget.All);
+            timerText.gameObject.SetActive(false); 
         }
     }
 }

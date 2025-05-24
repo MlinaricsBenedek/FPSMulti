@@ -35,7 +35,6 @@ public class MenuManager : MonoBehaviour
         }
 
         menu.Open();
-        //Debug.Log($"Menu {menu.menuName} opened.");
     }
 
     public void CloseMenu(Menu menu)
@@ -43,10 +42,8 @@ public class MenuManager : MonoBehaviour
         if (!menu.isOpen) return;
 
         menu.Close();
-        //Debug.Log($"Menu {menu.menuName} closed.");
+
     }
-
-
 }
 
 

@@ -2,7 +2,9 @@ using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -10,7 +12,7 @@ public class Timer : MonoBehaviourPunCallbacks
 {
     [SerializeField] private TMP_Text timerText;
     private bool isTimeFinish = false;
-    private float time = 15f;
+    private float time = 150f;
 
 
     public override void OnEnable()
@@ -27,7 +29,8 @@ public class Timer : MonoBehaviourPunCallbacks
 
     void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
     {
-        if (scene.buildIndex == 1)
+        if (scene.buildIndex == 2
+            )
         {
             StartCoroutine(GameTimer());
         }
@@ -46,11 +49,10 @@ public class Timer : MonoBehaviourPunCallbacks
             int minutes = Mathf.FloorToInt(remainingTime / 60);
             int seconds = Mathf.FloorToInt(remainingTime % 60);
             timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-            yield return new WaitForSeconds(1f); 
+            yield return new WaitForSeconds(1f);
             remainingTime -= 1f;
         }
         MatchController.Instance.SaveDatas();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
-
 }

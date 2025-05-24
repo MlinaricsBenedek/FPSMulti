@@ -10,6 +10,9 @@ using System.Net.Http;
 using System.Text;
 using System;
 using Newtonsoft.Json;
+using Photon.Pun;
+using UnityEngine.SceneManagement;
+using Newtonsoft.Json.Linq;
 
 public class Authentication : MonoBehaviour
 {
@@ -67,18 +70,22 @@ public class Authentication : MonoBehaviour
         }
 
         var tokenObj = JsonConvert.DeserializeObject<TokenObj>(responseJSON);
+        TokenController.Token = tokenObj.Token;
         if (tokenObj is not null)
         {
             DecodeJWT(tokenObj.Token);
             LoginPage.gameObject.SetActive(false);
             LoggedInPage.gameObject.SetActive(true);
         }
+        Debug.Log(tokenObj.Token);
         return tokenObj.Token;
     }
 
     private void DecodeJWT(string token)
-    { 
-        string[] splitToken = token.Split(',');
+    {
+        Debug.Log("decode:" + token);
+        string[] splitToken = token.Split('.');
+        Debug.Log(splitToken.Length);
         if (splitToken.Length == 3)
         { 
             string payload = splitToken[1];
@@ -89,12 +96,24 @@ public class Authentication : MonoBehaviour
                 payload += new string('=', missingChar);
             }
             byte[] bytes = Convert.FromBase64String(payload); 
-            string data = Encoding.UTF8.GetString(bytes);
-            UserDto user = JsonUtility.FromJson<UserDto>(data);
-            nameforToken.text = user.UserName;
-            ELO.text = user.ELO.ToString();
-            emailForToken.text = user.Email; 
+            string data = Encoding.UTF8.GetString(bytes);;
+            var payloadObj = JObject.Parse(data);
 
+            string userName = payloadObj["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"]?.ToString();
+            string email = payloadObj["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"]?.ToString();
+            string id = payloadObj["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"]?.ToString();
+            UserDto userDto = new()
+            {
+                Email = email,
+                Name = userName,
+                Id = int.Parse(id)
+            };
+            UserInformations.Name = userDto.Name;
+            nameforToken.text = userDto.Name;
+            emailForToken.text = userDto.Email;
+         
+            UserInformations.Email = userDto.Email;
+            UserInformations.UserId = userDto.Id;
         }
     }
 
@@ -128,5 +147,10 @@ public class Authentication : MonoBehaviour
         {
             message.text = "A jelszavak nem egyeznek!";
         }
+    }
+
+    public void LoadScene()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 }

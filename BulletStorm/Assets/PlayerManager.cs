@@ -35,7 +35,7 @@ public class PlayerManager : MonoBehaviour
   
     void CreateController()
     {
-        if (scene.buildIndex == 1)
+        if (scene.buildIndex == 2)
         {
             Transform spawnPoint = SpawnManager.instance.GetSpawnPoint();
             controller = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs",
@@ -48,7 +48,6 @@ public class PlayerManager : MonoBehaviour
 
     public void Die()
     {
-        Debug.Log("Destroy the player");
         PhotonNetwork.Destroy(controller);
         CreateController();
 
@@ -81,9 +80,7 @@ public class PlayerManager : MonoBehaviour
     [PunRPC]
     public void RPC_GetAssist()
     {
-        Debug.Log("meghívtuk az assistot");   
         Assist++;
-        Debug.Log(Assist);
         Hashtable hash = new Hashtable();
         hash.Add("Assist", Assist);
         PhotonNetwork.LocalPlayer.SetCustomProperties(hash);

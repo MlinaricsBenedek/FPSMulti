@@ -13,7 +13,7 @@ public class ScoreBoard : MonoBehaviourPunCallbacks
     private void Start()
     {
         CanvasGroup.alpha = 0;
-        foreach (Player player in PhotonNetwork.PlayerList)
+        foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
         {
             AddScoredBoard(player);
         }
