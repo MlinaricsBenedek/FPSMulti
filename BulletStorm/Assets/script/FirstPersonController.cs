@@ -36,17 +36,14 @@ public class FirstPersonController : MonoBehaviour
     PhotonView PV;
     Dictionary<Player, float> damageDealers = new();
     Dictionary<Player, float> damageTimestamps = new();
-    private void Awake()
+
+    void Start()
     {
         rb = GetComponent<Rigidbody>();
         playerCamera.fieldOfView = fov;
         PV = GetComponent<PhotonView>();
         playerManager = PhotonView.Find((int)PV.InstantiationData[0]).GetComponent<PlayerManager>();
-        
-    }
 
-    void Start()
-    {
         Cursor.lockState = CursorLockMode.Locked;
         slotFull = false;
         equipped =false;
@@ -235,7 +232,6 @@ public class FirstPersonController : MonoBehaviour
     }
     public void TakeDamage(float damage)
     {
-        Debug.Log("beleptunk a takedamagebe");
         PV.RPC(nameof(RPC_TakeDamage), PV.Owner, damage);
     }
 
@@ -255,8 +251,6 @@ public class FirstPersonController : MonoBehaviour
             damageDealers.Add(attacker, damage);
             damageTimestamps.Add(attacker, Time.time);
         }
-
-        Debug.Log("beleptunk az RPC_TAKEDAMAGE-be!!!!");
         if (currentHeal > damage)
         {
             currentHeal -= damage;

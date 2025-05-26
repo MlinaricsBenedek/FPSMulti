@@ -10,10 +10,10 @@ public class ScoreBoard : MonoBehaviourPunCallbacks
     [SerializeField] GameObject scoreBoardItemPrefab;
     [SerializeField] CanvasGroup CanvasGroup;
 
-    private void Start()
+    public override void OnJoinedRoom()
     {
         CanvasGroup.alpha = 0;
-        foreach (Player player in PhotonNetwork.PlayerList)
+        foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
         {
             AddScoredBoard(player);
         }

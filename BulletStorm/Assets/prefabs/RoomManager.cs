@@ -14,7 +14,6 @@ public class RoomManager : MonoBehaviourPunCallbacks
     {
         if (Instance)
         {
-            Debug.Log("lefutott az awake");
             Destroy(gameObject);
             return;
         }
@@ -37,10 +36,15 @@ public class RoomManager : MonoBehaviourPunCallbacks
 
     void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
     {
-        if (scene.buildIndex == 1)
+        if (scene.buildIndex == 2)
         {
-            Debug.Log("Most kellene inicializálni a playermanagert");
-            PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerManager"), Vector3.zero, Quaternion.identity);
+            StartCoroutine(WaitUntilPlayerWillBeInTheRoom());
         }
+    }
+
+    IEnumerator WaitUntilPlayerWillBeInTheRoom()
+    {
+        yield return new WaitUntil(() => PhotonNetwork.InRoom);
+        PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerManager"), Vector3.zero, Quaternion.identity);
     }
 }

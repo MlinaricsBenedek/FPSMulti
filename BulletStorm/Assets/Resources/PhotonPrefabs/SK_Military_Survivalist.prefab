@@ -166,7 +166,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5732502758079036974
 Transform:
   m_ObjectHideFlags: 0
@@ -3309,7 +3309,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 7247804429327161621}
-  maxTiltAngle: 10
+  maxTilt: 10
   tiltSpeed: 5
 --- !u!114 &-5566283064312855926
 MonoBehaviour:

@@ -9,19 +9,18 @@ public class Menu : MonoBehaviour
 
     public void Open()
     {
-        if (isOpen) return; // M?r nyitva van
+        if (isOpen) return; 
 
         isOpen = true;
         gameObject.SetActive(true);
-        //Debug.Log($"Menu {menuName} is now open.");
     }
 
     public void Close()
     {
-        if (!isOpen) return; // M?r z?rva van
+        if (!isOpen) return; 
 
         isOpen = false;
         gameObject.SetActive(false);
-        //Debug.Log($"Menu {menuName} is now closed.");
+
     }
 }
