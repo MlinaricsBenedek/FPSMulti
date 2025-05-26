@@ -77,15 +77,13 @@ public class Authentication : MonoBehaviour
             LoginPage.gameObject.SetActive(false);
             LoggedInPage.gameObject.SetActive(true);
         }
-        Debug.Log(tokenObj.Token);
         return tokenObj.Token;
     }
 
     private void DecodeJWT(string token)
     {
-        Debug.Log("decode:" + token);
         string[] splitToken = token.Split('.');
-        Debug.Log(splitToken.Length);
+
         if (splitToken.Length == 3)
         { 
             string payload = splitToken[1];

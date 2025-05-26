@@ -3,20 +3,22 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public static class TeamController 
 {
-    public static List<Player> CreateTeams(List<Player> players,out List<Player> blueTeam,out List<Player> redTeams)
+    public static HashSet<Player> CreateTeams(HashSet<Player> players,out List<Player> blueTeam,out List<Player> redTeams)
     {
-        List<Player> teams = new();
+        HashSet<Player> teams = new();
         redTeams = new List<Player>();
         blueTeam = new List<Player>();
         if (players.Count > 6)
         {
             return null;
         }
-        players.Sort((a, b) =>
+        List<Player> sortedPlayers = new List<Player>(players);
+        sortedPlayers.Sort((a, b) =>
         {
             double eloA = a.CustomProperties.TryGetValue("elo", out object eloAObj) ? Convert.ToDouble(eloAObj) : 0.0;
             double eloB = b.CustomProperties.TryGetValue("elo", out object eloBObj) ? Convert.ToDouble(eloBObj) : 0.0;
@@ -27,8 +29,8 @@ public static class TeamController
         bool color = true;
         while (lowEloPlayers < highEloPlayers)
         {
-            var low = players[lowEloPlayers];
-            var high = players[highEloPlayers];
+            var low = sortedPlayers[lowEloPlayers];
+            var high = sortedPlayers[highEloPlayers];
             if (color)
             {
                 redTeams.Add(low);
@@ -43,8 +45,8 @@ public static class TeamController
             highEloPlayers--;
             color = !color;
         }
-        teams.AddRange(blueTeam);
-        teams.AddRange(redTeams);
+        teams.UnionWith(blueTeam);
+        teams.UnionWith(redTeams);
         return teams;
     }
 }

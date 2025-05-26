@@ -38,7 +38,13 @@ public class RoomManager : MonoBehaviourPunCallbacks
     {
         if (scene.buildIndex == 2)
         {
-            PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerManager"), Vector3.zero, Quaternion.identity);
+            StartCoroutine(WaitUntilPlayerWillBeInTheRoom());
         }
+    }
+
+    IEnumerator WaitUntilPlayerWillBeInTheRoom()
+    {
+        yield return new WaitUntil(() => PhotonNetwork.InRoom);
+        PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerManager"), Vector3.zero, Quaternion.identity);
     }
 }
