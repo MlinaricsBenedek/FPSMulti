@@ -7,16 +7,17 @@ public class IKController : MonoBehaviour
     public Animator animator;
     Transform rightHandTarget;
     Transform leftHandTarget;
-    public Transform aimTarget; // Ez az ami követi az egeret
-    public Transform gunHolder; // Ez a gun parentje
-    public float maxTiltAngle = 10f; // Max dõlés szög
+    Transform aimTarget; 
+    Transform gunHolder; 
+    public float maxTilt = 10f; 
     public float tiltSpeed = 5f;
     private Quaternion initialRotation;
     private void Awake()
     {
         rightHandTarget = null;
         leftHandTarget = null;
-
+        aimTarget = GetComponentInChildren<Transform>().Find("AimTarget");
+        gunHolder = GetComponentInChildren<Transform>().Find("GunPosition");
     }
     private void Start()
     {
@@ -28,31 +29,21 @@ public class IKController : MonoBehaviour
     {
         if (animator)
         {
-            Debug.Log("IK-ban lévõ adat jobb kéz: "+rightHandTarget);
-            // Jobb kéz mozgásának beállítása
             if (rightHandTarget != null)
             {
-                Debug.Log("itt már lefut az Ik script");
                 animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1);
                 animator.SetIKRotationWeight(AvatarIKGoal.RightHand, 1);
                 animator.SetIKPosition(AvatarIKGoal.RightHand, rightHandTarget.position);
                 animator.SetIKRotation(AvatarIKGoal.RightHand, rightHandTarget.rotation);
             }
-
-            // Bal kéz mozgásának beállítása (ha támogatott)
             if (gunHolder == null || aimTarget == null) return;
             else 
             {
-                Vector3 localTargetDir = gunHolder.InverseTransformPoint(aimTarget.position);
-
-                float tiltAmount = Mathf.Clamp(localTargetDir.y * maxTiltAngle, -maxTiltAngle, maxTiltAngle);
-                Quaternion targetRotation = initialRotation * Quaternion.Euler(-tiltAmount, 0f, 0f);
-                gunHolder.localRotation = Quaternion.Slerp(gunHolder.localRotation, targetRotation, Time.deltaTime * tiltSpeed);
+                Tilt();
             }
 
             if (leftHandTarget != null)
-            {
-                Debug.Log("itt már lefut az Ik script");
+            { 
                 animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
                 animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1);
                 animator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandTarget.position);
@@ -78,5 +69,13 @@ public class IKController : MonoBehaviour
     public void SetLeftHandTargetTransform(Transform? _leftHandTarget)
     {
         leftHandTarget = _leftHandTarget;
+    }
+
+    private void Tilt()
+    {
+        Vector3 targetDirection = gunHolder.InverseTransformPoint(aimTarget.position);
+        float tilt = Mathf.Clamp(targetDirection.y * maxTilt, -maxTilt, maxTilt);
+        Quaternion targetRotation = initialRotation * Quaternion.Euler(-tilt, 0f, 0f);
+        gunHolder.localRotation = Quaternion.Slerp(gunHolder.localRotation, targetRotation, Time.deltaTime * tiltSpeed);
     }
 }
