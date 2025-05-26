@@ -7,9 +7,9 @@ public class IKController : MonoBehaviour
     public Animator animator;
     Transform rightHandTarget;
     Transform leftHandTarget;
-    Transform aimTarget; // Ez az ami követi az egeret
-    Transform gunHolder; // Ez a gun parentje
-    public float maxTiltAngle = 10f; // Max dõlés szög
+    Transform aimTarget; 
+    Transform gunHolder; 
+    public float maxTilt = 10f; 
     public float tiltSpeed = 5f;
     private Quaternion initialRotation;
     private void Awake()
@@ -39,11 +39,7 @@ public class IKController : MonoBehaviour
             if (gunHolder == null || aimTarget == null) return;
             else 
             {
-                Vector3 localTargetDir = gunHolder.InverseTransformPoint(aimTarget.position);
-
-                float tiltAmount = Mathf.Clamp(localTargetDir.y * maxTiltAngle, -maxTiltAngle, maxTiltAngle);
-                Quaternion targetRotation = initialRotation * Quaternion.Euler(-tiltAmount, 0f, 0f);
-                gunHolder.localRotation = Quaternion.Slerp(gunHolder.localRotation, targetRotation, Time.deltaTime * tiltSpeed);
+                Tilt();
             }
 
             if (leftHandTarget != null)
@@ -73,5 +69,13 @@ public class IKController : MonoBehaviour
     public void SetLeftHandTargetTransform(Transform? _leftHandTarget)
     {
         leftHandTarget = _leftHandTarget;
+    }
+
+    private void Tilt()
+    {
+        Vector3 targetDirection = gunHolder.InverseTransformPoint(aimTarget.position);
+        float tilt = Mathf.Clamp(targetDirection.y * maxTilt, -maxTilt, maxTilt);
+        Quaternion targetRotation = initialRotation * Quaternion.Euler(-tilt, 0f, 0f);
+        gunHolder.localRotation = Quaternion.Slerp(gunHolder.localRotation, targetRotation, Time.deltaTime * tiltSpeed);
     }
 }

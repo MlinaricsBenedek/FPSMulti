@@ -30,9 +30,7 @@ public class GunController : MonoBehaviour
     }
 
     public void PickUp(Transform gunPosition)
-    {
-        Debug.Log($"PickUp meghívva: gunPosition = .{gunPosition.transform.position}");
-
+    { 
         transform.SetParent(gunPosition);
         transform.localScale = transform.localScale / 2;
         transform.localPosition = new Vector3(0.5f, 0.2f, 0.404f);

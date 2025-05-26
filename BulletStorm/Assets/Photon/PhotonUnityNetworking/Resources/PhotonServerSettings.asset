@@ -45,6 +45,17 @@ MonoBehaviour:
   - SyncPlayerLeftRoom
   - RPC_PickUp
   - Timer
+  - RPC_GetKilled
+  - RPC_GetAssist
+  - GetAssist
+  - GetRoomByName
+  - RPC_SyncPlayerLeftRoom
+  - RPC_SyncPlayerName
+  - StartTimer
+  - RPC_SetTeams
+  - RequestJoinLobby
+  - RPC_JoinLobby
+  - RPC_StartTimer
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1
