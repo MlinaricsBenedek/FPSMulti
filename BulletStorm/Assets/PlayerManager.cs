@@ -36,8 +36,8 @@ public class PlayerManager : MonoBehaviour
         {
             Transform spawnPoint = SpawnManager.instance.GetSpawnPoint();
             controller = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs","SK_Military_Survivalist"),
-          spawnPoint.position, spawnPoint.rotation, 0, new object[] { Pv.ViewID }
-          );
+          spawnPoint.position, spawnPoint.rotation, 0, new object[] { Pv.ViewID });
+            ScoreBoard.Instance.Init();
         }
           
     }

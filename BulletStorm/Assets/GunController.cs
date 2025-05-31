@@ -30,8 +30,9 @@ public class GunController : MonoBehaviour
     }
 
     public void PickUp(Transform gunPosition)
-    { 
-        transform.SetParent(gunPosition);
+    {
+        transform.position = gunPosition.position;
+        transform.rotation = gunPosition.rotation;
         transform.localScale = transform.localScale / 2;
         transform.localPosition = new Vector3(0.5f, 0.2f, 0.404f);
         transform.localRotation = Quaternion.Euler(0f, -105.06f, 0f);
@@ -51,7 +52,7 @@ public class GunController : MonoBehaviour
         float random = Random.Range(-0.01f, 0.01f);
         rigidBody.AddTorque(new Vector3(random, random, random) * 3);
     }
-    
+
     public void Shoot()
     {
         if (lastShootTime + delay < Time.time)
@@ -69,6 +70,34 @@ public class GunController : MonoBehaviour
             }
         }
         prefab.SetActive(false);
+    }
+
+    [PunRPC]
+    void RPC_SetParent(int playerViewID)
+    {
+        PhotonView playerView = PhotonView.Find(playerViewID);
+        if (playerView != null)
+        {
+            Transform gunPosition = playerView.transform.Find("GunPosition");
+            if (gunPosition != null)
+            {
+                transform.SetParent(gunPosition);
+                transform.localScale = transform.localScale / 2;
+                transform.localPosition = new Vector3(0.5f, 0.2f, 0.404f);
+                transform.localRotation = Quaternion.Euler(0f, -105.06f, 0f);
+
+                if (TryGetComponent<Rigidbody>(out var rb)) rb.isKinematic = true;
+                if (TryGetComponent<Collider>(out var col)) col.isTrigger = true;
+            }
+            else
+            {
+                Debug.LogWarning("Nem található GunPosition a játékos prefabban.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Nem található PhotonView a játékoshoz.");
+        }
     }
 
     public void GetDirection(Transform _playerCameraTransform)

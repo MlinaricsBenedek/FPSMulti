@@ -45,9 +45,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52dc3b2da54343242a3f0c39996ce6eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Kills: 0
-  Death: 0
-  Assist: 0
 --- !u!114 &4815305988367966941
 MonoBehaviour:
   m_ObjectHideFlags: 0

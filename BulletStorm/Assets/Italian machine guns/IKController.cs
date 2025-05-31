@@ -1,5 +1,7 @@
+using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class IKController : MonoBehaviour
@@ -12,23 +14,27 @@ public class IKController : MonoBehaviour
     public float maxTilt = 10f; 
     public float tiltSpeed = 5f;
     private Quaternion initialRotation;
+    PhotonView PhotonView;
     private void Awake()
     {
         rightHandTarget = null;
         leftHandTarget = null;
         aimTarget = GetComponentInChildren<Transform>().Find("AimTarget");
         gunHolder = GetComponentInChildren<Transform>().Find("GunPosition");
+        PhotonView = gameObject.GetComponent<PhotonView>(); 
     }
     private void Start()
     {
         if (gunHolder != null)
             initialRotation = gunHolder.localRotation;
+
     }
 
     void OnAnimatorIK(int layerIndex)
     {
         if (animator)
         {
+            Debug.Log("righthandtarget" + rightHandTarget);
             if (rightHandTarget != null)
             {
                 animator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1);
@@ -36,18 +42,18 @@ public class IKController : MonoBehaviour
                 animator.SetIKPosition(AvatarIKGoal.RightHand, rightHandTarget.position);
                 animator.SetIKRotation(AvatarIKGoal.RightHand, rightHandTarget.rotation);
             }
-            if (gunHolder == null || aimTarget == null) return;
-            else 
-            {
-                Tilt();
-            }
-
+            Debug.Log("leftHandTarget" + leftHandTarget);
             if (leftHandTarget != null)
             { 
                 animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1);
                 animator.SetIKRotationWeight(AvatarIKGoal.LeftHand, 1);
                 animator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandTarget.position);
                 animator.SetIKRotation(AvatarIKGoal.LeftHand, leftHandTarget.rotation);
+            }
+            if (gunHolder == null || aimTarget == null) return;
+            else
+            {
+                Tilt();
             }
         }
         else
@@ -60,7 +66,33 @@ public class IKController : MonoBehaviour
         }
     }
 
-    #nullable enable
+    private void Update()
+    {
+        if (!PhotonView.IsMine) return;
+
+        if (rightHandTarget != null && leftHandTarget != null)
+        {
+            PhotonView.RPC("GetIKTargets", RpcTarget.Others,
+                rightHandTarget.position, rightHandTarget.rotation,
+                leftHandTarget.position, leftHandTarget.rotation);
+        }
+    }
+
+    [PunRPC]
+    void GetIKTargets(Vector3 rightPos, Quaternion rightRot, Vector3 leftPos, Quaternion leftRot)
+    {
+        if (rightHandTarget == null)
+            rightHandTarget = new GameObject("RemoteRightHandTarget").transform;
+        if (leftHandTarget == null)
+            leftHandTarget = new GameObject("RemoteLeftHandTarget").transform;
+
+        rightHandTarget.position = rightPos;
+        rightHandTarget.rotation = rightRot;
+
+        leftHandTarget.position = leftPos;
+        leftHandTarget.rotation = leftRot;
+    }
+#nullable enable
     public void SetRightHandTargetTransform(Transform? _rightHandTarget)
     {
         rightHandTarget = _rightHandTarget;

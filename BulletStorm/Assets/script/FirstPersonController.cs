@@ -1,11 +1,12 @@
 using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Animations.Rigging;
 
-public class FirstPersonController : MonoBehaviour
+public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCallbacks
 {
     private Rigidbody rb;
     public Animator animator;
@@ -28,6 +29,7 @@ public class FirstPersonController : MonoBehaviour
     private float dropUpwardForce =10f;
     [SerializeField] public Transform GunPosition;
     GunController gunController;
+    GameObject gunPv; 
     RotationConstraint LeftHandConstraint;
     RotationConstraint RightHandConstraint;
     IKController IKController;
@@ -91,6 +93,11 @@ public class FirstPersonController : MonoBehaviour
                 gunController.GetDirection(playerCamera.transform);
             }
         }
+        if (gunController is not null)
+        {
+            gunController.gameObject.transform.position = GunPosition.position;
+            gunController.gameObject.transform.rotation = GunPosition.rotation;
+        }
     }
 
     public void HandleInput()
@@ -145,27 +152,35 @@ public class FirstPersonController : MonoBehaviour
     public void PickUp()
     {
         int gunLayerMask = LayerMask.GetMask("GUN");
+        Debug.Log("Beléptünk a pickupba.");
         RaycastHit hit;
         if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit,100f,gunLayerMask) &&
             hit.collider != null &&
             Input.GetKey(KeyCode.E))
         {
+            Debug.Log("Az ektakált object" + hit.collider.name);
             if (slotFull is false)
             {
-                gunController = hit.collider.GetComponent<GunController>();
-                Debug.Log("GUn controller" + gunController);
-                if (gunController != null)
+                gunPv = hit.collider.gameObject;
+                Debug.Log(gunPv.name);
+                if (gunPv is null)
                 {
-                    Debug.Log("gun position fps: " + GunPosition.gameObject.name);
-                    gunController.PickUp(GunPosition);
-                    GetRotationConstraints(gunController);
-                    equipped = true;
-                    slotFull = true;
+                    Debug.Log("global gun null");
                 }
+                PhotonView gunPhotonView = gunPv.GetComponent<PhotonView>();
+                gunPhotonView.RequestOwnership();
             }
         }
     }
-
+    [PunRPC]
+    void DestroyGunRPC(int viewID)
+    {
+        PhotonView view = PhotonView.Find(viewID);
+        if (view != null)
+        {
+            PhotonNetwork.Destroy(view.gameObject);
+        }
+    }
     private void Shoot()
     {
         int playerLayerMask = LayerMask.GetMask("Player");
@@ -196,10 +211,11 @@ public class FirstPersonController : MonoBehaviour
             weight = 1f,
             sourceTransform = gun.gameObject.transform.Find("LeftHandTarget"),
         };
+        Debug.Log("leftHandconstraintSource.sourceTransform)");
         IKController.SetLeftHandTargetTransform(leftHandconstraintSource.sourceTransform);
         LeftHandConstraint.AddSource(leftHandconstraintSource);
         LeftHandConstraint.constraintActive = true;
-
+        Debug.Log("lefutott a lefthandconstrait:" + LeftHandConstraint);
         while (RightHandConstraint.sourceCount > 0)
         {
             RightHandConstraint.RemoveSource(0);
@@ -214,6 +230,7 @@ public class FirstPersonController : MonoBehaviour
         IKController.SetRightHandTargetTransform(rightHandconstraintSource.sourceTransform);
         RightHandConstraint.AddSource(rightHandconstraintSource);
         RightHandConstraint.constraintActive = true;
+        Debug.Log("lefutott a rightHandconstraintSource:" + rightHandconstraintSource);
     }
 
     public void DropDown()
@@ -359,5 +376,37 @@ public class FirstPersonController : MonoBehaviour
         Debug.Log("the player die");
 
         playerManager.Die();
+    }
+
+    public void OnOwnershipRequest(PhotonView targetView, Player requestingPlayer)
+    { }
+
+    public void OnOwnershipTransfered(PhotonView targetView, Player previousOwner)
+    {
+        if (!PV.IsMine) return;
+
+        if (gunPv != null && targetView.gameObject == gunPv)
+        {
+            PhotonNetwork.Destroy(gunPv);
+            var gun = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Gun"), GunPosition.position, GunPosition.rotation);
+            gunController = gun.GetComponent<GunController>();
+            gunController.PickUp(GunPosition);
+            GetRotationConstraints(gunController);
+            equipped = true;
+            slotFull = true;
+        }
+    }
+
+    public void OnOwnershipTransferFailed(PhotonView targetView, Player senderOfFailedRequest)
+    { }
+
+    public override void OnEnable()
+    {
+        PhotonNetwork.AddCallbackTarget(this);
+    }
+
+    public override void OnDisable()
+    {
+        PhotonNetwork.RemoveCallbackTarget(this);
     }
 }

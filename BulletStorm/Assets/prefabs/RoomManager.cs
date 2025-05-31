@@ -46,5 +46,7 @@ public class RoomManager : MonoBehaviourPunCallbacks
     {
         yield return new WaitUntil(() => PhotonNetwork.InRoom);
         PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerManager"), Vector3.zero, Quaternion.identity);
+        Transform spawnPoint = SpawnManager.instance.GetSpawnPoint();
+        PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "GunPV"), spawnPoint.position, spawnPoint.rotation);
     }
 }

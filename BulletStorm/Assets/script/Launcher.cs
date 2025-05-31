@@ -61,6 +61,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public override void OnJoinedLobby()
     {
+        PhotonNetwork.LocalPlayer.NickName = UserInformations.Name;
         Debug.Log("Csatlakozás a lobbyhoz");
         isInLobby = true;
 
@@ -89,6 +90,7 @@ public class Launcher : MonoBehaviourPunCallbacks
         }
         Debug.Log(_photonView.ViewID);
         MenuManager.Instance.OpenMenu("Default");
+       
     }
 
     public void CreateRoom()
@@ -222,20 +224,6 @@ public class Launcher : MonoBehaviourPunCallbacks
         PhotonNetwork.JoinOrCreateRoom("lobby",roomOptions,typedLobby);
     }
 
-
-    //[PunRPC]
-    //void GetRoomByName(string roomName)
-    //{
-    //    Debug.Log("létrehozott szoba neve"+roomName);
-    //    isInLobby = true;
-    //    currentRoomName = roomName;
-    //    isJoiningRoom = true;
-    //    if (PhotonNetwork.InRoom && PhotonNetwork.CurrentRoom.Name == "lobby")
-    //    {
-    //        PhotonNetwork.LeaveRoom();
-    //    }
-    //}
-
     [PunRPC]
     void RPC_SetTeams(string team, string roomName)
     {
@@ -258,16 +246,6 @@ public class Launcher : MonoBehaviourPunCallbacks
         HandleLobbyRoom(playerElo);
     }
 
-    //public override void OnCreatedRoom()
-    //{
-    //    foreach (var teamMate in teams)
-    //    {
-    //        Debug.Log("temMate" + teamMate);
-    //        if(!currentRoomName.Equals("lobby"))
-    //        _photonView.RPC("GetRoomByName", teamMate, currentRoomName);
-    //    }
-    //}
-
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
         MenuManager.Instance.OpenMenu("ErrorMenu");
@@ -283,11 +261,9 @@ public class Launcher : MonoBehaviourPunCallbacks
         }
         else
         {
-            Debug.Log("a match szobába lévõ játékosok száma:"+currentRoomName+" "+PhotonNetwork.CurrentRoom.PlayerCount);
-            MenuManager.Instance.OpenMenu("Default");
-            PhotonNetwork.NickName = UserInformations.Name;
+            MenuManager.Instance.OpenMenu("PlayerLobby");
             int index = 0;
-            foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)
+            foreach (var player in PhotonNetwork.CurrentRoom.Players.Values)
             {
                 if (index < userNames.Length)
                 {
@@ -321,6 +297,8 @@ public class Launcher : MonoBehaviourPunCallbacks
         }
     }
 
+
+
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
         MenuManager.Instance.OpenMenu("ErrorMenu");
@@ -328,8 +306,7 @@ public class Launcher : MonoBehaviourPunCallbacks
     }
 
     public override void OnPlayerEnteredRoom(Player newPlayer)
-    { 
-        newPlayer.NickName =  UserInformations.Name;
+    {
         for (int i = 0; i < userNames.Length; i++)
         {
             if (userNames[i].text == "")

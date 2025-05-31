@@ -3,14 +3,25 @@ using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ScoreBoard : MonoBehaviourPunCallbacks
 {
     [SerializeField] Transform container;
     [SerializeField] GameObject scoreBoardItemPrefab;
     [SerializeField] CanvasGroup CanvasGroup;
+    public static ScoreBoard Instance;
+    void Awake()
+    {
+        if (Instance)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
 
-    public override void OnJoinedRoom()
+    public void Init()
     {
         CanvasGroup.alpha = 0;
         foreach (Player player in PhotonNetwork.CurrentRoom.Players.Values)

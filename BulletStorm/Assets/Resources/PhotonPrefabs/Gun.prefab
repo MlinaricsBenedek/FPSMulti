@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7071365375100148593}
   - component: {fileID: 9007863178831603155}
   - component: {fileID: 2957289661446733252}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: MuzzleFlashEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4792,7 +4792,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6278221663513445173}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: LeftHandTarget
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4823,7 +4823,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 171981310985736816}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: TrailStartPos
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4856,7 +4856,7 @@ GameObject:
   - component: {fileID: 8926018208786517107}
   - component: {fileID: 5458383428765993763}
   - component: {fileID: 5365886485398619}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Italian machine gun_hook
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4939,7 +4939,7 @@ GameObject:
   - component: {fileID: 2443665145625313064}
   - component: {fileID: 909505391684658920}
   - component: {fileID: 3209896488214227935}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Italian machine gun_holder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5024,9 +5024,11 @@ GameObject:
   - component: {fileID: 1565545591333396160}
   - component: {fileID: 4437117611269457561}
   - component: {fileID: 4377779824618769352}
-  m_Layer: 0
-  m_Name: Italian machine guns (2) 1
-  m_TagString: Untagged
+  - component: {fileID: -3517421969696305055}
+  - component: {fileID: 8355616136519650610}
+  m_Layer: 7
+  m_Name: Gun
+  m_TagString: GUN
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5117,8 +5119,8 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
+  m_UseGravity: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -5140,6 +5142,62 @@ MonoBehaviour:
   impact: {fileID: 6237951738224332100, guid: bbb443b8afcddf3409e989b3ee3e9dfc, type: 3}
   prefab: {fileID: 1817000011090323472, guid: 4423ef0b5ba039b4895af20469f7cef5, type: 3}
   spawnPoint: {fileID: 171981310985736816}
+--- !u!114 &-3517421969696305055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5739177801179682361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa584fbee541324448dd18d8409c7a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObservedComponentsFoldoutOpen: 1
+  Group: 0
+  prefixField: -1
+  Synchronization: 1
+  OwnershipTransfer: 1
+  observableSearch: 0
+  ObservedComponents:
+  - {fileID: 8355616136519650610}
+  sceneViewId: 0
+  InstantiationId: 0
+  isRuntimeInstantiated: 0
+--- !u!114 &8355616136519650610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5739177801179682361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8efc6b1d64977384eb3405357896c656, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PositionModel:
+    SynchronizeEnabled: 1
+    TeleportEnabled: 1
+    TeleportIfDistanceGreaterThan: 3
+    InterpolateOption: 2
+    InterpolateMoveTowardsSpeed: 1
+    InterpolateLerpSpeed: 1
+    ExtrapolateOption: 3
+    ExtrapolateSpeed: 1
+    ExtrapolateIncludingRoundTripTime: 1
+    ExtrapolateNumberOfStoredPositions: 1
+  m_RotationModel:
+    SynchronizeEnabled: 1
+    InterpolateOption: 1
+    InterpolateRotateTowardsSpeed: 180
+    InterpolateLerpSpeed: 5
+  m_ScaleModel:
+    SynchronizeEnabled: 1
+    InterpolateOption: 1
+    InterpolateMoveTowardsSpeed: 1
+    InterpolateLerpSpeed: 0
 --- !u!1 &8395135988813246452
 GameObject:
   m_ObjectHideFlags: 0
@@ -5151,7 +5209,7 @@ GameObject:
   - component: {fileID: 7874550805543995414}
   - component: {fileID: 8274202098640944985}
   - component: {fileID: 8402709385957866199}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Italian machine gun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5232,7 +5290,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4516879087917197650}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: RightHandTarget
   m_TagString: Untagged
   m_Icon: {fileID: 0}
