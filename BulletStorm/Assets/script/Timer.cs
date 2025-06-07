@@ -13,7 +13,7 @@ public class Timer : MonoBehaviourPunCallbacks
     public static Timer Instance;   
 
     [SerializeField] private TMP_Text timerText;
-    private float time = 6000f;
+    private float time = 200f;
 
     private void Awake()
     {

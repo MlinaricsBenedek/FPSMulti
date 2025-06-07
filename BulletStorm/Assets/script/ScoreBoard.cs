@@ -1,9 +1,6 @@
 using Photon.Pun;
 using Photon.Realtime;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class ScoreBoard : MonoBehaviourPunCallbacks
 {
@@ -31,7 +28,7 @@ public class ScoreBoard : MonoBehaviourPunCallbacks
     }
 
     void AddScoredBoard(Player player)
-    { 
+    {
         ScoreBoardItem prefab = Instantiate(scoreBoardItemPrefab, container).GetComponent<ScoreBoardItem>();
         prefab.Initialized(player);
 

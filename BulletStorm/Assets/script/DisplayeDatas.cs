@@ -1,8 +1,11 @@
+using Photon.Pun;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 public class DisplayeDatas : MonoBehaviour
@@ -12,6 +15,7 @@ public class DisplayeDatas : MonoBehaviour
     public TMP_Text[] Assists;
     public TMP_Text[] Deaths;
     public Button BackButton;
+    [SerializeField] TMP_Text WON;
     Dictionary<string, MatchResult> values = new();
     private void Start()
     {
@@ -26,14 +30,26 @@ public class DisplayeDatas : MonoBehaviour
             Kills[index].text = value.Value.Kill.ToString();
             Assists[index].text = value.Value.Assist.ToString();
             Deaths[index].text = value.Value.Deaths.ToString();
+            if (value.Key == PhotonNetwork.LocalPlayer.NickName)
+            {
+                WON.text = value.Value.Won ? "WON" : "LOSE";
+            }
             index++;
         }
-       
     }
 
     public async void SendData()
-    { 
-        await ApiHandler.instance.GlobalStatisticsAsync();
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            await ApiHandler.instance.GlobalStatisticsAsync();
+        }
         await ApiHandler.instance.HandleMatchAPIAsync();
+    }
+
+    public void SceeneHandler()
+    {
+        PhotonNetwork.LeaveRoom();
+        PhotonNetwork.LoadLevel(SceneManager.GetActiveScene().buildIndex -4);
     }
 }
