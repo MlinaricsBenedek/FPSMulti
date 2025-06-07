@@ -10,6 +10,8 @@ public static class TeamController
 {
     public static HashSet<Player> CreateTeams(HashSet<Player> players,out List<Player> blueTeam,out List<Player> redTeams)
     {
+        Teams.RedTeams.Clear();
+        Teams.BlueTeams.Clear();
         HashSet<Player> teams = new();
         redTeams = new List<Player>();
         blueTeam = new List<Player>();
@@ -46,7 +48,9 @@ public static class TeamController
             color = !color;
         }
         teams.UnionWith(blueTeam);
+        Teams.BlueTeams.AddRange(blueTeam);
         teams.UnionWith(redTeams);
+        Teams.RedTeams.AddRange(redTeams);
         return teams;
     }
 }

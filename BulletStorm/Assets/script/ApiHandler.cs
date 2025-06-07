@@ -11,13 +11,10 @@ using UnityEngine;
 
 public class ApiHandler
 {
-    private readonly string CreateMatchUrl = "https://localhost:7023/api/Match";
-    private readonly string UpdateMatchUrl = "https://localhost:7023/api/Match";
-    private readonly string GetMatchUrl = "https://localhost:7023/api/Match";
-    private readonly string CreateStatisticsUrl = "https://localhost:7023/api/Statistics";
-    private readonly string UpdateStatisticsUrl = "https://localhost:7023/api/Statistics";
-    private readonly string GetStatisticsUrl = "https://localhost:7023/api/Statistics";
-    bool firstGame = false;
+    private readonly string MatchUrl = "https://localhost:7023/api/Match";
+    private readonly string StatisticsUrl = "https://localhost:7023/api/Statistics";
+
+    private readonly string GlobalStatisticsUrl = "https://localhost:7023/api/GlobalStatistics";
     private readonly JsonSerializerSettings serializerSettings = new();
     Dictionary<string, MatchResult> values = new();
     MatchResult matchScore = new MatchResult();
@@ -26,16 +23,22 @@ public class ApiHandler
 
     public Result MatchStats()
     {
-        values = MatchController.Instance.gameStats;
+        values = MatchController.gameStats;
+        Debug.Log(values.Count);
+        Debug.Log(PhotonNetwork.LocalPlayer.NickName);
+       
         ResultDto matchResultDto = new();
+        matchResultDto.MatchResult = new();
         foreach (var value in values)
         {
             if (PhotonNetwork.LocalPlayer.NickName.Equals(value.Key))
             {
-                matchResultDto.MatchResult.Assist = value.Value.Assist;
+                Debug.Log(value.Value.Assist+"matchresultdto:"+matchResultDto.MatchResult.Assist);
                 matchResultDto.MatchResult.Kill = value.Value.Kill;
-                matchResultDto.MatchResult.Deaths = value.Value.Deaths;    
-                matchResultDto.MatchResult.Won = value.Value.Won;    
+                matchResultDto.MatchResult.Deaths = value.Value.Deaths;
+                matchResultDto.MatchResult.Won = value.Value.Won;
+                matchResultDto.MatchResult.Assist = value.Value.Assist;
+                  
             }       
         }
         matchResultDto.AllKill = AggregatedKills();
@@ -85,7 +88,7 @@ public class ApiHandler
 
     public async Task GlobalStatisticsAsync()
     {
-        values = MatchController.Instance.gameStats;
+        values = MatchController.gameStats;
         GlobalStatistics globalStatistics = new();
         foreach (var value in values)
         { 
@@ -111,9 +114,10 @@ public class ApiHandler
         string httpContent = JsonConvert.SerializeObject(playerStats, serializerSettings);
         var httpClient = new HttpClient();
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(CreateMatchUrl, new StringContent(httpContent,
+        HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(MatchUrl, new StringContent(httpContent,
             Encoding.UTF8, "application/json"));
         if (!httpResponseMessage.IsSuccessStatusCode) throw new System.Exception(httpResponseMessage.StatusCode.ToString());
+        Debug.Log(httpResponseMessage.RequestMessage);
         string response = await httpResponseMessage.Content.ReadAsStringAsync();
         return response;
     }
@@ -124,9 +128,10 @@ public class ApiHandler
         string httpContent = JsonConvert.SerializeObject(playerStats, serializerSettings);
         var httpClient = new HttpClient();
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        HttpResponseMessage httpResponseMessage = await httpClient.PutAsync(UpdateMatchUrl, new StringContent(httpContent,
+        HttpResponseMessage httpResponseMessage = await httpClient.PutAsync(MatchUrl, new StringContent(httpContent,
             Encoding.UTF8, "application/json"));
         if (!httpResponseMessage.IsSuccessStatusCode) throw new System.Exception(httpResponseMessage.StatusCode.ToString());
+        Debug.Log(httpResponseMessage.RequestMessage);
         string response = await httpResponseMessage.Content.ReadAsStringAsync();
         return response;
     }
@@ -135,7 +140,7 @@ public class ApiHandler
     {
         var httpClient = new HttpClient();
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(GetMatchUrl);
+        HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(MatchUrl);
         if (!httpResponseMessage.IsSuccessStatusCode) throw new System.Exception(httpResponseMessage.StatusCode.ToString());
         string response = await httpResponseMessage.Content.ReadAsStringAsync();
         int matchCounter= JsonConvert.DeserializeObject<int>(response);
@@ -146,7 +151,7 @@ public class ApiHandler
     {
         var httpClient = new HttpClient();
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(GetStatisticsUrl);
+        HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(StatisticsUrl);
         if (!httpResponseMessage.IsSuccessStatusCode) throw new System.Exception(httpResponseMessage.StatusCode.ToString());
         string response = await httpResponseMessage.Content.ReadAsStringAsync();
         float elo = JsonConvert.DeserializeObject<float>(response);
@@ -158,7 +163,7 @@ public class ApiHandler
         string httpContent = JsonConvert.SerializeObject(globalStatistics, serializerSettings);
         var httpClient = new HttpClient();
         httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        HttpResponseMessage httpResponseMessage = await httpClient.PutAsync(UpdateStatisticsUrl, new StringContent(httpContent,
+        HttpResponseMessage httpResponseMessage = await httpClient.PutAsync(GlobalStatisticsUrl, new StringContent(httpContent,
             Encoding.UTF8, "application/json"));
         if (!httpResponseMessage.IsSuccessStatusCode) throw new System.Exception(httpResponseMessage.StatusCode.ToString());
         string response = await httpResponseMessage.Content.ReadAsStringAsync();

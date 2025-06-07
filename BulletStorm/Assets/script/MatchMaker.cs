@@ -20,8 +20,6 @@ public class MatchMaker
         var validCombinations = new HashSet<HashSet<Player>>();
         var combinations = GenerateCombinations(new List<Player>(lobby), playerCount);
 
-        Debug.Log($"[MatchMaking] Összes kombináció: {combinations.Count}");
-
         foreach (var combination in combinations)
         {
             float minELO = float.MaxValue;

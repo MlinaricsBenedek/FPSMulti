@@ -10,37 +10,24 @@ using UnityEngine.SceneManagement;
 
 public class Timer : MonoBehaviourPunCallbacks
 {
+    public static Timer Instance;   
+
     [SerializeField] private TMP_Text timerText;
-    private bool isTimeFinish = false;
-    private float time = 150f;
+    private float time = 6000f;
 
-
-    public override void OnEnable()
+    private void Awake()
     {
-        base.OnEnable();
-        SceneManager.sceneLoaded += OnSceneLoaded;
-    }
-
-    public override void OnDisable()
-    {
-        base.OnDisable();
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-    }
-
-    void OnSceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
-    {
-        if (scene.buildIndex == 2
-            )
+        if (Instance == null)
         {
-            StartCoroutine(GameTimer());
+            Instance = this;
         }
         else
         {
-            StopCoroutine(GameTimer());
+            Destroy(this);
         }
     }
 
-    IEnumerator GameTimer()
+    public IEnumerator GameTimer()
     {
         float remainingTime = time;
 
@@ -53,6 +40,6 @@ public class Timer : MonoBehaviourPunCallbacks
             remainingTime -= 1f;
         }
         MatchController.Instance.SaveDatas();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        SceneManager.LoadScene("GameOwer");
     }
 }

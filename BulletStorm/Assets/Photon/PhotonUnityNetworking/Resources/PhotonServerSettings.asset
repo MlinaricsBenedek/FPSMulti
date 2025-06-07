@@ -59,6 +59,12 @@ MonoBehaviour:
   - RPC_SetParent
   - DestroyGunRPC
   - GetIKTargets
+  - RPC_EnableHat
+  - RPC_Cap
+  - RPC_Vest
+  - RPC_SetRoom
+  - RPC_SetHandTargets
+  - RPC_AttachGun
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

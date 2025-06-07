@@ -1,3 +1,4 @@
+using ExitGames.Client.Photon.StructWrapping;
 using Photon.Pun;
 using Photon.Realtime;
 using System.Collections.Generic;
@@ -13,10 +14,8 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
     public Camera playerCamera;
     public Transform AimTarget;
     public float fov = 60f;
-    private bool cameraCanMove = true;
     private float mouseSensitivity = 10f;
-    private float maxLookAngle = 50f;
-    private bool lockCursor = true;
+    private float maxLookAngle = 20f;
     private float yaw = 0.0f;
     private float pitch = 0.0f;
     private bool playerCanMove = true;
@@ -24,9 +23,6 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
     private float maxVelocityChange = 5.0f;
     float zDinstance = 10f;
     private bool slotFull;
-    private bool equipped;
-    private float dropForwardForce = 10f;
-    private float dropUpwardForce =10f;
     [SerializeField] public Transform GunPosition;
     GunController gunController;
     GameObject gunPv; 
@@ -36,11 +32,17 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
     private float currentHeal;
     PlayerManager playerManager;
     PhotonView PV;
-    Dictionary<Player, float> damageDealers = new();
-    Dictionary<Player, float> damageTimestamps = new();
-
+    Dictionary<Player, float> playersDamage = new();
+    Dictionary<Player, float> shootTimers = new();
+    Transform gunEndPoint;
+    [SerializeField] GameObject Cap;
+    [SerializeField] GameObject Vest;
+    string Team;
+    GameObject gun;
     void Start()
     {
+        Cap.SetActive(false);
+        Vest.SetActive(false);
         rb = GetComponent<Rigidbody>();
         playerCamera.fieldOfView = fov;
         PV = GetComponent<PhotonView>();
@@ -48,7 +50,6 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
 
         Cursor.lockState = CursorLockMode.Locked;
         slotFull = false;
-        equipped =false;
         IKController = GetComponent<IKController>();
         currentHeal = 100;
         if (!PV.IsMine)
@@ -70,9 +71,20 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
                 LeftHandConstraint = constraint;
             }
         }
+        photonView.Owner.CustomProperties.TryGetValue("team", out object team);
+        Team = team != null ? team.ToString(): "team";
+        if (Team == "team")
+        {
+            Debug.Log("A player nem tartozik egyik csapathoz sem.");
+        }
+        Debug.Log(Team);
+        Debug.Log(Teams.BlueTeams.Count);
+        Debug.Log(Teams.RedTeams.Count);
+        SetTeam(Team);
     }
 
     float camRotation;
+   
 
     private void Update()
     {
@@ -80,7 +92,56 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
         {
             HandleCamera();
             HandleInput();
+  
+        if (gunController is not null && !gunController.droppedGun)
+        {
+            gunController.gameObject.transform.position = GunPosition.position;
+            gunController.gameObject.transform.rotation = GunPosition.rotation;
+            gunController.GetDirection(playerCamera.transform);
         }
+        }
+    }
+
+    void LateUpdate()
+    {
+
+        if (!photonView.IsMine && !gunController.droppedGun && slotFull)
+        {
+            if (gun != null && gun.transform.position != null)
+            {
+                gun.transform.position = GunPosition.position;
+                gun.transform.rotation = GunPosition.rotation;
+            }
+        }
+    }
+
+    void SetTeam(string team)
+    {
+        if (team == "blueTeam")
+        {
+            photonView.RPC("RPC_Cap", RpcTarget.AllBuffered, true);
+            photonView.RPC("RPC_Vest", RpcTarget.AllBuffered, false);
+        }
+        if(team == "redTeam")
+        {
+            photonView.RPC("RPC_Cap", RpcTarget.AllBuffered, false);
+            photonView.RPC("RPC_Vest", RpcTarget.AllBuffered, true);
+
+        }
+    }
+
+    [PunRPC]
+    void RPC_Cap(bool isActive)
+    {
+        if (Cap != null)
+            Cap.SetActive(isActive);
+    }
+
+    [PunRPC]
+    void RPC_Vest(bool isActive)
+    {
+        if (Vest != null)
+            Vest.SetActive(isActive);
     }
 
     void FixedUpdate()
@@ -88,22 +149,13 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
         if (PV.IsMine)
         {
             Move();
-            if (gunController is not null)
-            { 
-                gunController.GetDirection(playerCamera.transform);
-            }
-        }
-        if (gunController is not null)
-        {
-            gunController.gameObject.transform.position = GunPosition.position;
-            gunController.gameObject.transform.rotation = GunPosition.rotation;
         }
     }
 
     public void HandleInput()
     {
         PickUp();
-        DropDown();
+        if(Input.GetKeyUp(KeyCode.Q)) DropDown();
         if (slotFull is true)
         {
            Shoot();
@@ -152,7 +204,7 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
     public void PickUp()
     {
         int gunLayerMask = LayerMask.GetMask("GUN");
-        Debug.Log("Beléptünk a pickupba.");
+        //Debug.Log("Beléptünk a pickupba.");
         RaycastHit hit;
         if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit,100f,gunLayerMask) &&
             hit.collider != null &&
@@ -161,17 +213,23 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
             Debug.Log("Az ektakált object" + hit.collider.name);
             if (slotFull is false)
             {
+                
                 gunPv = hit.collider.gameObject;
-                Debug.Log(gunPv.name);
+                IKController.SetPickedUpGUn(true);
+                IKController.SetGun(hit.collider.gameObject.transform);
                 if (gunPv is null)
                 {
                     Debug.Log("global gun null");
                 }
                 PhotonView gunPhotonView = gunPv.GetComponent<PhotonView>();
+               // photonView.RPC(nameof(RPC_AttachGun), RpcTarget.AllBuffered,
+               //photonView.ViewID,          // a fegyver ID-je
+               //hit.collider.gameObject.transform.GetComponentInParent<PhotonView>().ViewID);
                 gunPhotonView.RequestOwnership();
             }
         }
     }
+
     [PunRPC]
     void DestroyGunRPC(int viewID)
     {
@@ -181,25 +239,41 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
             PhotonNetwork.Destroy(view.gameObject);
         }
     }
+
     private void Shoot()
     {
-        int playerLayerMask = LayerMask.GetMask("Player");
-        RaycastHit hit;
-        if (Physics.Raycast(playerCamera.ScreenPointToRay(Input.mousePosition), out hit,100f, playerLayerMask) &&
-            hit.collider != null &&
-            Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0))
         {
-
             gunController.Shoot();
-            FirstPersonController enemy = hit.collider.GetComponent<FirstPersonController>();
-            if (enemy != null && enemy != this)
+            int playerLayerMask = LayerMask.GetMask("Player");
+            if (Physics.Raycast(gunEndPoint.position, gunEndPoint.forward, out RaycastHit hit, 100f, playerLayerMask) &&
+                hit.collider != null)
             {
-                enemy.TakeDamage(60);
+                Debug.DrawRay(gunEndPoint.position, gunEndPoint.forward * 100f, Color.red, 100f);
+
+                Debug.Log(hit.collider.name);
+
+                GameObject enemy = hit.collider.gameObject;
+                Debug.Log(enemy);
+
+                PhotonView enemyPV = enemy.GetPhotonView();
+                if (enemyPV == photonView)
+                {
+                    Debug.LogError("the pv is ours");
+                }
+                string theirTeam = enemyPV.Owner.CustomProperties["team"]?.ToString();
+                Debug.Log("enemy team:" + theirTeam);
+                Debug.Log("my team" + Team);
+                if (enemyPV != null && theirTeam != Team)
+                {
+                    enemyPV.RPC(nameof(RPC_TakeDamage), enemyPV.Owner, 60f);
+                }
             }
         }
     }
 
-    public void GetRotationConstraints(GunController gun)
+
+    public void GetRotationConstraints(GunController gun,int photonViewID)
     {
         while (LeftHandConstraint.sourceCount > 0)
         {
@@ -230,43 +304,72 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
         IKController.SetRightHandTargetTransform(rightHandconstraintSource.sourceTransform);
         RightHandConstraint.AddSource(rightHandconstraintSource);
         RightHandConstraint.constraintActive = true;
-        Debug.Log("lefutott a rightHandconstraintSource:" + rightHandconstraintSource);
+        int gunId = gun.GetComponent<PhotonView>().ViewID;
+        photonView.RPC(nameof(RPC_SetHandTargets), RpcTarget.AllBuffered, gunId);
+    }
+
+    [PunRPC]
+    void RPC_SetHandTargets(int gunViewId)
+    {
+        PhotonView gunPV = PhotonView.Find(gunViewId);
+        if (gunPV == null) return;       // ha még nem jött létre, késõbb újrahívódik a buffer miatt
+
+        Transform gunTransform = gunPV.transform;
+        Debug.Log(gunTransform);
+        Transform left = gunTransform.Find("LeftHandTarget");
+        Transform right = gunTransform.Find("RightHandTarget");
+        IKController.SetLeftHandTargetTransform(left);
+        IKController.SetRightHandTargetTransform(right);
+        Debug.Log("RPC constraint " + LeftHandConstraint+", left: "+left);
+        if (LeftHandConstraint != null && left != null)
+        { 
+            LeftHandConstraint.AddSource(new ConstraintSource { sourceTransform = left, weight = 1f });
+            LeftHandConstraint.constraintActive = true;
+            IKController.SetLeftHandTargetTransform(left);
+        
+        }
+        Debug.Log("right:" + right);
+        Debug.Log("Righhandconstrait" + RightHandConstraint);
+        if (RightHandConstraint != null && right != null)
+        {
+            RightHandConstraint.AddSource(new ConstraintSource { sourceTransform = right, weight = 1f });
+            RightHandConstraint.constraintActive = true;
+            IKController.SetRightHandTargetTransform(right);
+            Debug.Log("RPC constraint " + RightHandConstraint);
+
+        }
     }
 
     public void DropDown()
     {
-        if (slotFull is true && Input.GetKeyUp(KeyCode.Q))
+        if (slotFull is true )
         {
             if (gunController is not null)
             {
-                 gunController.DropDown();
+                gunController.DropDown();
                 IKController.SetLeftHandTargetTransform(null);
                 IKController.SetRightHandTargetTransform(null);
             }
-        equipped = false;
         slotFull = false;
         }
-    }
-    public void TakeDamage(float damage)
-    {
-        PV.RPC(nameof(RPC_TakeDamage), PV.Owner, damage);
     }
 
     [PunRPC]
     void RPC_TakeDamage(float damage, PhotonMessageInfo info)
     {
+        if (!PV.IsMine) return;
         Player attacker = info.Sender;
-
-        if (damageDealers.ContainsKey(attacker))
+       
+        if (playersDamage.ContainsKey(attacker))
         {
-            damageDealers[attacker] += damage;
-            damageTimestamps[attacker] = Time.time;
+            playersDamage[attacker] += damage;
+            shootTimers[attacker] = Time.time;
         }
 
         else
         {
-            damageDealers.Add(attacker, damage);
-            damageTimestamps.Add(attacker, Time.time);
+            playersDamage.Add(attacker, damage);
+            shootTimers.Add(attacker, Time.time);
         }
         if (currentHeal > damage)
         {
@@ -284,97 +387,30 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
 
     public void HandleAssits(Player killer)
     {
-        foreach (var pair in damageDealers)
+        foreach (var pair in playersDamage)
         {
             Player assister = pair.Key;
 
-            if (assister == killer) continue;
-
-            float lastHitTime = damageTimestamps[assister];
-            if (Time.time - lastHitTime <= 100f) 
+            if (assister != killer)
             {
-                PlayerManager assistManager = PlayerManager.Find(assister);
-                if (assistManager != null)
+                float lastHitTime = shootTimers[assister];
+                if (Time.time - lastHitTime <= 50f)
                 {
-                    PhotonView assistPV = assistManager.GetComponent<PhotonView>();
-                    assistPV.RPC("RPC_GetAssist", assister);
+                    PlayerManager assisterPlayerManager = PlayerManager.Find(assister);
+                    if (assisterPlayerManager != null)
+                    {
+                        PhotonView assisterPV = assisterPlayerManager.GetComponent<PhotonView>();
+                        assisterPV.RPC("RPC_GetAssist", assister);
+                    }
                 }
             }
         }
     }
-    //public void TakeDamage(int damage)
-    //{
-    //    Debug.Log("beleptunk a takedamagebe");
-    //    PV.RPC(nameof(RPC_TakeDamage), RpcTarget.All, damage);
-    //}
-
-    //[PunRPC]
-    //void RPC_TakeDamage(int damage, PhotonMessageInfo info)
-    //{
-    //    Player attacker = info.Sender;
-
-    //    if (damageDealers.ContainsKey(attacker))
-    //    {
-    //        damageDealers[attacker] += damage;
-    //        damageTimestamps[attacker] = Time.time;
-    //    }
-
-    //    else
-    //    {
-    //        damageDealers.Add(attacker, damage);
-    //        damageTimestamps.Add(attacker, Time.time);
-    //    }
-
-    //    if (currentHeal > damage)
-    //    {
-    //        Debug.Log("Beleptunk az if-be if (currentHeal > damage)");
-    //        currentHeal -= damage;
-    //        Debug.Log(damageDealers);
-
-    //    }
-    //    else
-    //    {
-    //        currentHeal = 0;
-    //        Die();
-    //        PlayerManager.Find(attacker).GetKill();
-    //        foreach (var pair in damageDealers)
-    //        {
-    //            Debug.Log("beleptunk a foreachbe");
-    //            if (pair.Key != attacker)
-    //            {
-    //                Debug.Log("beleptunk az if-be beleptunk a foreachbe ");
-    //                float lastHitTime = damageTimestamps[pair.Key];
-    //                PlayerManager assistManager = PlayerManager.Find(pair.Key);
-    //                if (Time.time - lastHitTime <= 1265f)
-    //                {
-    //                    Debug.Log("Assist time valid: sending RPC");
-
-    //                    PhotonView assistPV = assistManager.GetComponent<PhotonView>();
-    //                    assistPV.RPC("RPC_GetAssist", pair.Key);
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
-    //[PunRPC]
-    //void RPC_TakeDamage(int damage)
-    //{
-    //    Debug.Log("beleptunk az RPC_TAKEDAMAGE-be!!!!");
-    //    if (currentHeal > damage)
-    //    {
-    //        currentHeal -= damage;
-    //    }
-    //    else
-    //    {
-    //        currentHeal = 0;
-    //        Die();
-    //    }
-    //}
 
     void Die()
     {
         Debug.Log("the player die");
-
+        DropDown();
         playerManager.Die();
     }
 
@@ -388,11 +424,12 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
         if (gunPv != null && targetView.gameObject == gunPv)
         {
             PhotonNetwork.Destroy(gunPv);
-            var gun = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Gun"), GunPosition.position, GunPosition.rotation);
+            gun = PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "Gun"), GunPosition.position, GunPosition.rotation);
+            gunEndPoint = gun.transform.Find("Direction");
             gunController = gun.GetComponent<GunController>();
             gunController.PickUp(GunPosition);
-            GetRotationConstraints(gunController);
-            equipped = true;
+            int viewId = gun.GetPhotonView().ViewID;
+            GetRotationConstraints(gunController,viewId);
             slotFull = true;
         }
     }

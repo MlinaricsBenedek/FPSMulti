@@ -15,7 +15,10 @@ public class DisplayeDatas : MonoBehaviour
     Dictionary<string, MatchResult> values = new();
     private void Start()
     {
-        values= MatchController.Instance.gameStats;
+        UnityEngine.Cursor.lockState = CursorLockMode.None;
+        UnityEngine.Cursor.visible = true;
+        Debug.Log("Cursor állapot: " + UnityEngine.Cursor.lockState + ", látható: " + UnityEngine.Cursor.visible);
+        values = MatchController.gameStats;
         int index = 0;
         foreach (var value in values)
         {
@@ -25,6 +28,7 @@ public class DisplayeDatas : MonoBehaviour
             Deaths[index].text = value.Value.Deaths.ToString();
             index++;
         }
+       
     }
 
     public async void SendData()

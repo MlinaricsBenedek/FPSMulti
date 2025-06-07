@@ -39,13 +39,18 @@ public class RoomManager : MonoBehaviourPunCallbacks
         if (scene.buildIndex == 2)
         {
             StartCoroutine(WaitUntilPlayerWillBeInTheRoom());
+            StartCoroutine(Timer.Instance.GameTimer());
         }
     }
 
     IEnumerator WaitUntilPlayerWillBeInTheRoom()
     {
         yield return new WaitUntil(() => PhotonNetwork.InRoom);
-        PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "PlayerManager"), Vector3.zero, Quaternion.identity);
+        if (PhotonNetwork.LocalPlayer.TagObject == null)
+        {
+            GameObject playerManager = PhotonNetwork.Instantiate("PlayerManager", Vector3.zero, Quaternion.identity);
+            PhotonNetwork.LocalPlayer.TagObject = playerManager; 
+        }
         Transform spawnPoint = SpawnManager.instance.GetSpawnPoint();
         PhotonNetwork.Instantiate(Path.Combine("PhotonPrefabs", "GunPV"), spawnPoint.position, spawnPoint.rotation);
     }

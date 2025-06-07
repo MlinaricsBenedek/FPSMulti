@@ -558,14 +558,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1795231343021363590}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0.09763645, z: -0, w: 0.99522215}
   m_LocalPosition: {x: 0, y: 0, z: -1.62}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8223893367874868325}
   m_Father: {fileID: 3728037317904010570}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -11.206, z: 0}
 --- !u!1 &2031130420878540042
 GameObject:
   m_ObjectHideFlags: 0
@@ -1461,7 +1461,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &8816940440384917562
 Transform:
   m_ObjectHideFlags: 0
@@ -2359,7 +2359,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &6004896439675346035
 Transform:
   m_ObjectHideFlags: 0
@@ -3077,7 +3077,7 @@ GameObject:
   - component: {fileID: 2600132631087651466}
   m_Layer: 8
   m_Name: SK_Military_Survivalist
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3151,6 +3151,8 @@ MonoBehaviour:
   AimTarget: {fileID: 3966573392272355940}
   fov: 60
   GunPosition: {fileID: 7788711897329879952}
+  Cap: {fileID: 4824280105356005499}
+  Vest: {fileID: 3610433827048232499}
 --- !u!54 &346108838923994458
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3310,6 +3312,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 7247804429327161621}
+  gunHolder: {fileID: 7788711897329879952}
   maxTilt: 10
   tiltSpeed: 5
 --- !u!114 &-5566283064312855926
@@ -3577,8 +3580,7 @@ GameObject:
   - component: {fileID: 3966573392272355940}
   - component: {fileID: 4516409068705916239}
   - component: {fileID: 3423180851200403614}
-  - component: {fileID: 4600420722041002797}
-  m_Layer: 8
+  m_Layer: 2
   m_Name: AimTarget
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3594,8 +3596,8 @@ Transform:
   m_GameObject: {fileID: 6758995159811668558}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.464, z: 1.1}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalPosition: {x: 0, y: 1.464, z: 0.564}
+  m_LocalScale: {x: 0.020676857, y: 0.020676857, z: 0.020676857}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 3728037317904010570}
@@ -3650,27 +3652,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!135 &4600420722041002797
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6758995159811668558}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6829252289193768135
 GameObject:
   m_ObjectHideFlags: 0
@@ -3826,7 +3807,7 @@ Transform:
   m_GameObject: {fileID: 6903791367400089717}
   serializedVersion: 2
   m_LocalRotation: {x: -0.15729633, y: 0, z: 0, w: 0.98755145}
-  m_LocalPosition: {x: 0, y: 1.66, z: 1.59}
+  m_LocalPosition: {x: 0.545, y: 1.66, z: 1.59}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4091,7 +4072,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &7842280298841154329
 Transform:
   m_ObjectHideFlags: 0

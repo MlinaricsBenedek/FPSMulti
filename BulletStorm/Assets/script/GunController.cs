@@ -8,18 +8,19 @@ public class GunController : MonoBehaviour
     Rigidbody rigidBody;
     private PhotonView photonView;
     Collider _collider;
-    public float dropForwardForce = 10f;
-    public float dropUpwardForce = 10f;
+    public float dropForwardForce = 2f;
+    public float dropUpwardForce = 2f;
     Transform playerCameraTransform;
     private Vector3 BulletSpread = new Vector3(0.01f, 0.01f, 0.01f);
     [SerializeField] ParticleSystem muzzleFlash;
     [SerializeField] ParticleSystem impact;
     [SerializeField] GameObject prefab;
-    [SerializeField] Transform spawnPoint;
-    float delay = 0.5f;
+    float delay = 0.2f;
     float lastShootTime;
     float maxDistance = 100f;
-    Vector3 Direction;
+    [SerializeField] Transform Direction;
+    public bool droppedGun=false;
+    FirstPersonController FPSController;
 
     void Awake()
     {
@@ -31,6 +32,8 @@ public class GunController : MonoBehaviour
 
     public void PickUp(Transform gunPosition)
     {
+        droppedGun = false;
+        FPSController = GetComponentInParent<FirstPersonController>();
         transform.position = gunPosition.position;
         transform.rotation = gunPosition.rotation;
         transform.localScale = transform.localScale / 2;
@@ -43,10 +46,9 @@ public class GunController : MonoBehaviour
 
     public void DropDown()
     {
-        transform.SetParent(null);
+        droppedGun = true;
         rigidBody.isKinematic = false;
         _collider.isTrigger = false;
-        transform.localScale = transform.localScale * 2;
         rigidBody.AddForce(playerCameraTransform.forward * dropForwardForce, ForceMode.Impulse);
         rigidBody.AddForce(playerCameraTransform.up * dropUpwardForce, ForceMode.Impulse);
         float random = Random.Range(-0.01f, 0.01f);
@@ -57,11 +59,11 @@ public class GunController : MonoBehaviour
     {
         if (lastShootTime + delay < Time.time)
         {
-            Direction.Normalize();
-            if (Physics.Raycast(spawnPoint.position, Direction, out RaycastHit hit, maxDistance))
+            Vector3 vector = Direction.forward;
+            if (Physics.Raycast(Direction.position, vector, out RaycastHit hit, maxDistance))
             {
                 prefab.SetActive(true);
-                GameObject trailGO = PhotonNetwork.Instantiate("TrailRoot", spawnPoint.position, Quaternion.LookRotation(Direction));
+                GameObject trailGO = PhotonNetwork.Instantiate("TrailRoot", Direction.position, Quaternion.LookRotation(vector));
                 TrailRenderer trail = trailGO.GetComponentInChildren<TrailRenderer>();
 
                 StartCoroutine(SpawnTrail(trail, hit));
@@ -72,38 +74,9 @@ public class GunController : MonoBehaviour
         prefab.SetActive(false);
     }
 
-    [PunRPC]
-    void RPC_SetParent(int playerViewID)
-    {
-        PhotonView playerView = PhotonView.Find(playerViewID);
-        if (playerView != null)
-        {
-            Transform gunPosition = playerView.transform.Find("GunPosition");
-            if (gunPosition != null)
-            {
-                transform.SetParent(gunPosition);
-                transform.localScale = transform.localScale / 2;
-                transform.localPosition = new Vector3(0.5f, 0.2f, 0.404f);
-                transform.localRotation = Quaternion.Euler(0f, -105.06f, 0f);
-
-                if (TryGetComponent<Rigidbody>(out var rb)) rb.isKinematic = true;
-                if (TryGetComponent<Collider>(out var col)) col.isTrigger = true;
-            }
-            else
-            {
-                Debug.LogWarning("Nem található GunPosition a játékos prefabban.");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("Nem található PhotonView a játékoshoz.");
-        }
-    }
-
     public void GetDirection(Transform _playerCameraTransform)
     {
         playerCameraTransform = _playerCameraTransform;
-        Direction = playerCameraTransform.transform.forward;
     }
 
     private IEnumerator SpawnTrail(TrailRenderer trail, RaycastHit hit)
