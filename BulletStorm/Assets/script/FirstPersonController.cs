@@ -104,7 +104,7 @@ public class FirstPersonController : MonoBehaviourPunCallbacks, IPunOwnershipCal
 
     void LateUpdate()
     {
-
+        if (photonView is null || gunController is null) return;
         if (!photonView.IsMine && !gunController.droppedGun && slotFull)
         {
             if (gun != null && gun.transform.position != null)

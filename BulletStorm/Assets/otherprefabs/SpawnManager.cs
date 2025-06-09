@@ -15,7 +15,9 @@ public class SpawnManager : MonoBehaviour
 
     public Transform GetSpawnPoint()
     {
-        if (Teams.BlueTeams.Contains(PhotonNetwork.LocalPlayer))
+        PhotonNetwork.LocalPlayer.CustomProperties.TryGetValue("team", out object team);
+        string Team = team.ToString();  
+        if (Team == "blueTeam")
         {
             return spawnPoints[Random.Range(0, 2)].transform;
         }

@@ -50,6 +50,9 @@ public class DisplayeDatas : MonoBehaviour
     public void SceeneHandler()
     {
         PhotonNetwork.LeaveRoom();
-        PhotonNetwork.LoadLevel(SceneManager.GetActiveScene().buildIndex -4);
+    }
+    public override void OnLeftRoom()
+    {
+        SceneManager.LoadScene("Autentication");
     }
 }
